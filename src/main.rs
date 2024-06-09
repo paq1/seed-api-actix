@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 
 #[get("/")]
@@ -16,10 +17,15 @@ async fn manual_hello() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    HttpServer::new(|| {
+    HttpServer::new(move || {
+        let cors = Cors::default()
+            .allowed_origin("*")
+            .allowed_methods(vec!["GET", "POST"])
+            .supports_credentials();
         App::new()
-            .service(hello)
-            .service(echo)
+            .wrap(cors)
+            // .service(hello)
+            // .service(echo)
             .route("/hey", web::get().to(manual_hello))
     })
         .workers(1)
