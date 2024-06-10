@@ -1,18 +1,31 @@
 use actix_cors::Cors;
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{App, get, HttpResponse, HttpServer, Responder, web};
+use serde::{Deserialize, Serialize};
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+#[derive(Serialize, Deserialize, Clone)]
+struct Todo {
+    name: String,
 }
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Many<T>
+    where
+        T: Serialize + Clone
+{
+    items: Vec<T>,
 }
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
+
+#[get("/todos")]
+async fn fetch_many() -> impl Responder {
+    HttpResponse::Ok().json(Many::<Todo> { items: vec![] })
+}
+
+#[get("/todos/{id}")]
+async fn fetch_one(path: web::Path<String>) -> impl Responder {
+    let id = path.into_inner();
+    HttpResponse::Ok().json(Todo { name: id })
 }
 
 #[actix_web::main]
@@ -24,9 +37,8 @@ async fn main() -> std::io::Result<()> {
             .supports_credentials();
         App::new()
             .wrap(cors)
-            // .service(hello)
-            // .service(echo)
-            .route("/hey", web::get().to(manual_hello))
+            .service(fetch_one)
+            .service(fetch_many)
     })
         .workers(1)
         .bind(("127.0.0.1", 8080))?
