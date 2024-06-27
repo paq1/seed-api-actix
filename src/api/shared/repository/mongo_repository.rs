@@ -33,7 +33,7 @@ where
     DBO: DeserializeOwned + Send + Sync
 {
     async fn fetch_one(&self, id: String) -> Result<Option<DBO>, String> {
-        let filter = doc! {"id": id};
+        let filter = doc! {"entity_id": id};
         self.collection
             .find_one(filter)
             .await

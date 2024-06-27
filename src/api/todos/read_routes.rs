@@ -4,6 +4,8 @@ use actix_web::{get, HttpResponse, Responder, web};
 use futures::lock::Mutex;
 
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
+use crate::core::shared::repositories::repository::ReadOnlyRepository;
+use crate::models::todos::views::errors::Error;
 use crate::models::todos::views::jsonapi::Many;
 use crate::models::todos::views::Todo;
 
@@ -23,7 +25,14 @@ pub async fn fetch_many() -> impl Responder {
     )
 )]
 #[get("/todos/{id}")]
-pub async fn fetch_one(path: web::Path<String>, service_test: web::Data<Arc<Mutex<TodosMongoRepository>>>) -> impl Responder {
+pub async fn fetch_one(path: web::Path<String>, repo: web::Data<Arc<Mutex<TodosMongoRepository>>>) -> impl Responder {
     let id = path.into_inner();
-    HttpResponse::Ok().json(Todo { name: id })
+
+    let repo_lock = repo.lock().await;
+
+    match repo_lock.fetch_one(id).await {
+        Ok(Some(res)) => HttpResponse::Ok().json(res.data.clone()),
+        Ok(_) => HttpResponse::NotFound().json(Error {title: "pas de data".to_string()}),
+        Err(err) => HttpResponse::InternalServerError().json(Error {title: "bruh".to_string()})
+    }
 }
