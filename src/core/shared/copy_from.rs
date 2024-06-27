@@ -1,3 +1,3 @@
-pub trait CopyFromId {
-    fn copy_from_id(&self, id: String) -> Self;
+pub trait CopyFromId<ID> {
+    fn copy_from_id(&self, id: ID) -> Self;
 }
