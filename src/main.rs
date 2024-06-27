@@ -10,7 +10,7 @@ use utoipa::{
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::api::swagger::ApiDoc;
-use crate::api::todos::read_routes::{fetch_many, fetch_one};
+use crate::api::todos::read_routes::{fetch_many, fetch_one, insert_one};
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 
 mod core;
@@ -45,6 +45,7 @@ async fn main() -> std::io::Result<()> {
             ))
             .service(fetch_one)
             .service(fetch_many)
+            .service(insert_one)
     })
         .workers(2)
         .bind(("127.0.0.1", 8080))?

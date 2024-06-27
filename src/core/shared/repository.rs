@@ -8,5 +8,5 @@ pub trait ReadOnlyRepository<ENTITY, ID> {
 
 #[async_trait]
 pub trait WriteOnlyRepository<ENTITY, ID> {
-    async fn insert(&self, entity: ENTITY, id: Option<ID>) -> Result<ID, String>;
+    async fn insert(&self, entity: ENTITY) -> Result<ID, String>;
 }

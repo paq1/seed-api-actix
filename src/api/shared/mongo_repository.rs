@@ -3,6 +3,7 @@ use mongodb::{Client, Collection};
 use mongodb::bson::doc;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use uuid::Uuid;
 use crate::core::shared::copy_from::CopyFromId;
 use crate::core::shared::repository::{ReadOnlyRepository, WriteOnlyRepository};
 
@@ -45,8 +46,8 @@ impl<ENTITY> WriteOnlyRepository<ENTITY, String> for MongoRepository<ENTITY>
 where
     ENTITY: Serialize + CopyFromId + Send + Sync,
 {
-    async fn insert(&self, entity: ENTITY, id: Option<String>) -> Result<String, String> {
-        let id_metier = id.unwrap_or(Self::generate_id());
+    async fn insert(&self, entity: ENTITY) -> Result<String, String> {
+        let id_metier = Self::generate_id();
         self.collection
             .insert_one(entity.copy_from_id(id_metier.clone()))
             .await
@@ -63,6 +64,6 @@ impl<ENTITY> IdGenerator for MongoRepository<ENTITY>
 where
     ENTITY: Send + Sync {
     fn generate_id() -> String {
-        "lol".to_string()
+        Uuid::new_v4().to_string()
     }
 }
