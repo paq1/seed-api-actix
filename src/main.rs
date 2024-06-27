@@ -1,7 +1,8 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use actix_cors::Cors;
 use actix_web::{App, HttpServer, Responder, web};
+use futures::lock::Mutex;
 use serde::{Deserialize, Serialize};
 use utoipa::{
     Modify,
@@ -10,8 +11,10 @@ use utoipa::{
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::api::swagger::ApiDoc;
-use crate::api::todos::read_routes::{fetch_many, fetch_one, insert_one};
+use crate::api::todos::read_routes::{fetch_many, fetch_one};
+use crate::api::todos::services::TodosServiceImpl;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
+use crate::api::todos::write_routes::insert_one;
 
 mod core;
 mod api;
@@ -26,6 +29,14 @@ async fn main() -> std::io::Result<()> {
         )
     );
 
+    let todos_service: Arc<Mutex<TodosServiceImpl<TodosMongoRepository>>> = Arc::new(
+        Mutex::new(
+            TodosServiceImpl {
+                store: Arc::clone(&repo)
+            }
+        )
+    );
+
     let openapi = ApiDoc::openapi();
 
     HttpServer::new(move || {
@@ -36,7 +47,10 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(
-                web::Data::new(repo.clone())
+                web::Data::new(Arc::clone(&repo))
+            )
+            .app_data(
+                web::Data::new(Arc::clone(&todos_service))
             )
             .wrap(cors)
             .service(SwaggerUi::new("/swagger-ui/{_:.*}").url(
