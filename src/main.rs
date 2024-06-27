@@ -20,7 +20,11 @@ mod models;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    let repo: Arc<Mutex<TodosMongoRepository>> = Arc::new(Mutex::new(TodosMongoRepository::new().await));
+    let repo: Arc<Mutex<TodosMongoRepository>> = Arc::new(
+        Mutex::new(
+            TodosMongoRepository::new("seedtodomongo".to_string(), "todos_store_actix".to_string()).await
+        )
+    );
 
     let openapi = ApiDoc::openapi();
 
@@ -42,7 +46,7 @@ async fn main() -> std::io::Result<()> {
             .service(fetch_one)
             .service(fetch_many)
     })
-        .workers(1)
+        .workers(2)
         .bind(("127.0.0.1", 8080))?
         .run()
         .await
