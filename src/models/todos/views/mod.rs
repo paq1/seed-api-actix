@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 pub mod jsonapi;
+pub mod errors;
 
 #[derive(Serialize, Deserialize, Clone, ToSchema)]
 pub struct Todo {

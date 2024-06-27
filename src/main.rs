@@ -1,7 +1,8 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use actix_cors::Cors;
 use actix_web::{App, HttpServer, Responder, web};
+use futures::lock::Mutex;
 use serde::{Deserialize, Serialize};
 use utoipa::{
     Modify,
@@ -11,7 +12,9 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use crate::api::swagger::ApiDoc;
 use crate::api::todos::read_routes::{fetch_many, fetch_one};
+use crate::api::todos::services::TodosServiceImpl;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
+use crate::api::todos::write_routes::insert_one;
 
 mod core;
 mod api;
@@ -20,7 +23,19 @@ mod models;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 
-    let repo: Arc<Mutex<TodosMongoRepository>> = Arc::new(Mutex::new(TodosMongoRepository::new().await));
+    let repo: Arc<Mutex<TodosMongoRepository>> = Arc::new(
+        Mutex::new(
+            TodosMongoRepository::new("seedtodomongo".to_string(), "todos_store_actix".to_string()).await
+        )
+    );
+
+    let todos_service: Arc<Mutex<TodosServiceImpl<TodosMongoRepository>>> = Arc::new(
+        Mutex::new(
+            TodosServiceImpl {
+                store: Arc::clone(&repo)
+            }
+        )
+    );
 
     let openapi = ApiDoc::openapi();
 
@@ -32,7 +47,10 @@ async fn main() -> std::io::Result<()> {
 
         App::new()
             .app_data(
-                web::Data::new(repo.clone())
+                web::Data::new(Arc::clone(&repo))
+            )
+            .app_data(
+                web::Data::new(Arc::clone(&todos_service))
             )
             .wrap(cors)
             .service(SwaggerUi::new("/swagger-ui/{_:.*}").url(
@@ -41,8 +59,9 @@ async fn main() -> std::io::Result<()> {
             ))
             .service(fetch_one)
             .service(fetch_many)
+            .service(insert_one)
     })
-        .workers(1)
+        .workers(2)
         .bind(("127.0.0.1", 8080))?
         .run()
         .await

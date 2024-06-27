@@ -1,12 +1,15 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+
 use actix_web::{get, HttpResponse, Responder, web};
+use futures::lock::Mutex;
+
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::models::todos::views::jsonapi::Many;
 use crate::models::todos::views::Todo;
 
 #[utoipa::path(
     responses(
-        (status = 200, description = "fait ca", body = Many<Todo>)
+        (status = 200, description = "fait ca", body = Many < Todo >)
     )
 )]
 #[get("/todos")]
