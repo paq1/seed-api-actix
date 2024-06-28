@@ -1,4 +1,4 @@
 pub mod copy_from;
-pub mod repositories;
+pub mod daos;
 
 pub mod data;

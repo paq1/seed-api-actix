@@ -4,8 +4,9 @@ use mongodb::bson::doc;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use uuid::Uuid;
+
 use crate::core::shared::copy_from::CopyFromId;
-use crate::core::shared::repositories::dao::{ReadOnlyDAO, WriteOnlyDAO};
+use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 
 pub struct MongoDAO<DBO>
 where

@@ -1,9 +1,10 @@
 use async_trait::async_trait;
-use crate::api::shared::repository::dbos::EntityDBO;
+
+use crate::api::shared::daos::dbos::EntityDBO;
 use crate::api::todos::todo_dbo::TodoDbo;
 use crate::api::todos::todos_mongo_dao::TodosMongoDAO;
+use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::shared::data::Entity;
-use crate::core::shared::repositories::dao::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::todos::data::Todo;
 use crate::core::todos::todos_repository::{TodosRepositoryReadOnly, TodosRepositoryWriteOnly};
 
@@ -52,8 +53,12 @@ impl TodosRepositoryReadOnly for TodosMongoRepository {
 impl TodosRepositoryWriteOnly for TodosMongoRepository {
     async fn insert_one(&self, todo: Entity<Todo, String>) -> Result<String, String> {
         let entity_dbo: EntityDBO<TodoDbo, String> = todo.into();
-        // fixme mettre la version a 0
 
-        self.dao.insert(entity_dbo).await
+        let sanitize_version: EntityDBO<TodoDbo, String> = EntityDBO {
+            version: Some(0),
+            ..entity_dbo.clone()
+        };
+
+        self.dao.insert(sanitize_version).await
     }
 }

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+
 use crate::core::shared::copy_from::CopyFromId;
 
 #[derive(Serialize, Deserialize, Clone)]
