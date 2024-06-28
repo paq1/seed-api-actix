@@ -8,7 +8,7 @@ use crate::core::shared::data::EntityEvent;
 use crate::core::todos::data::TodoEvents;
 use crate::core::todos::todos_repository::{TodosEventRepositoryReadOnly, TodosEventRepositoryWriteOnly};
 
-struct TodosEventMongoRepository {
+pub struct TodosEventMongoRepository {
     pub dao: TodosEventMongoDAO,
 }
 

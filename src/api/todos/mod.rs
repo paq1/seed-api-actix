@@ -4,4 +4,4 @@ pub mod read_routes;
 pub mod write_routes;
 pub mod services;
 pub mod todos_mongo_repository;
-mod todo_event_mongo_repository;
+pub mod todo_event_mongo_repository;

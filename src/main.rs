@@ -9,7 +9,8 @@ use utoipa_swagger_ui::SwaggerUi;
 use crate::api::swagger::ApiDoc;
 use crate::api::todos::read_routes::{fetch_many, fetch_one};
 use crate::api::todos::services::TodosServiceImpl;
-use crate::api::todos::todos_mongo_dao::TodosMongoDAO;
+use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
+use crate::api::todos::todos_mongo_dao::{TodosEventMongoDAO, TodosMongoDAO};
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::api::todos::write_routes::insert_one;
 
@@ -27,10 +28,19 @@ async fn main() -> std::io::Result<()> {
         )
     );
 
-    let todos_service: Arc<Mutex<TodosServiceImpl<TodosMongoRepository>>> = Arc::new(
+    let journal: Arc<Mutex<TodosEventMongoRepository>> = Arc::new(
+        Mutex::new(
+            TodosEventMongoRepository {
+                dao: TodosEventMongoDAO::new("seedtodomongo".to_string(), "todos_journal_actix".to_string()).await
+            }
+        )
+    );
+
+    let todos_service: Arc<Mutex<TodosServiceImpl<TodosMongoRepository, TodosEventMongoRepository>>> = Arc::new(
         Mutex::new(
             TodosServiceImpl {
-                store: Arc::clone(&repo)
+                store: Arc::clone(&repo),
+                journal: Arc::clone(&journal),
             }
         )
     );

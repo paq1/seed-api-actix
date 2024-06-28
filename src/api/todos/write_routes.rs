@@ -4,6 +4,7 @@ use actix_web::{HttpResponse, post, Responder, web};
 use futures::lock::Mutex;
 
 use crate::api::todos::services::TodosServiceImpl;
+use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::core::todos::services::TodosService;
 use crate::models::todos::commands::CreateTodo;
@@ -19,7 +20,7 @@ use crate::models::todos::views::Todo;
 #[post("/todos")]
 pub async fn insert_one(
     body: web::Json<CreateTodo>,
-    todos_service: web::Data<Arc<Mutex<TodosServiceImpl<TodosMongoRepository>>>>
+    todos_service: web::Data<Arc<Mutex<TodosServiceImpl<TodosMongoRepository, TodosEventMongoRepository>>>>
 ) -> impl Responder {
     let command = body.into_inner();
     let lock = todos_service.lock().await;
