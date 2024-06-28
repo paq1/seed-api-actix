@@ -1,45 +1,15 @@
 use async_trait::async_trait;
 
 use crate::api::shared::daos::dbos::EntityDBO;
-use crate::api::todos::todo_dbo::{TodoDbo, TodoDboState};
+use crate::api::todos::todo_dbo::{TodoDboState};
 use crate::api::todos::todos_mongo_dao::TodosMongoDAO;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::shared::data::Entity;
-use crate::core::todos::data::{Todo, TodoStates};
+use crate::core::todos::data::TodoStates;
 use crate::core::todos::todos_repository::{TodosRepositoryReadOnly, TodosRepositoryWriteOnly};
 
 pub struct TodosMongoRepository {
     pub dao: TodosMongoDAO,
-}
-
-impl From<TodoDboState> for TodoStates {
-    fn from(value: TodoDboState) -> Self {
-        match value {
-            TodoDboState::TodoDbo(data) => TodoStates::Todo(Todo {
-                name: data.name.clone()
-            })
-        }
-    }
-}
-
-
-impl From<Entity<TodoStates, String>> for EntityDBO<TodoDboState, String> {
-    fn from(value: Entity<TodoStates, String>) -> Self {
-        EntityDBO {
-            id_mongo: None,
-            version: None,
-            entity_id: value.entity_id.clone(),
-            data: value.data.into(),
-        }
-    }
-}
-
-impl From<TodoStates> for TodoDboState {
-    fn from(value: TodoStates) -> Self {
-        match value {
-            TodoStates::Todo(x) => TodoDboState::TodoDbo(TodoDbo { name: x.name.clone() })
-        }
-    }
 }
 
 #[async_trait]

@@ -2,10 +2,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum TodoStates {
-    Todo(Todo)
+    Todo { name: String }
 }
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Todo {
-    pub name: String
+pub enum TodoEvents {
+    Created {
+        by: String,
+        at: String
+    }
 }

@@ -1,6 +1,6 @@
 use mongodb::bson::oid::ObjectId;
 use serde::{Deserialize, Serialize};
-
+use crate::api::todos::todo_dbo::TodoDboEvent;
 use crate::core::shared::copy_from::CopyFromId;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -31,6 +31,15 @@ where
     fn copy_from_id(&self, id: ID) -> Self {
         Self {
             entity_id: id,
+            ..self.clone()
+        }
+    }
+}
+
+impl CopyFromId<String> for EventDBO<TodoDboEvent, String> {
+    fn copy_from_id(&self, id: String) -> Self {
+        Self {
+            event_id: id,
             ..self.clone()
         }
     }

@@ -1,22 +1,16 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
 pub enum TodoDboState {
-    TodoDbo(TodoDbo)
+    TodoDbo { name: String }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct TodoDbo {
-    pub name: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(untagged)]
 pub enum TodoDboEvent {
-    TodoCreatedDbo(TodoCreatedDbo)
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct TodoCreatedDbo {
-    by: String,
-    at: String,
+    TodoCreatedDbo {
+        by: String,
+        at: String,
+    }
 }
