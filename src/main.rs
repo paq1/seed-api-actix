@@ -1,18 +1,15 @@
 use std::sync::Arc;
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, Responder, web};
+use actix_web::{App, HttpServer, web};
 use futures::lock::Mutex;
-use serde::{Deserialize, Serialize};
-use utoipa::{
-    Modify,
-    OpenApi, ToSchema
-};
+use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::api::swagger::ApiDoc;
 use crate::api::todos::read_routes::{fetch_many, fetch_one};
 use crate::api::todos::services::TodosServiceImpl;
+use crate::api::todos::todos_mongo_dao::TodosMongoDAO;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::api::todos::write_routes::insert_one;
 
@@ -22,10 +19,11 @@ mod models;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-
     let repo: Arc<Mutex<TodosMongoRepository>> = Arc::new(
         Mutex::new(
-            TodosMongoRepository::new("seedtodomongo".to_string(), "todos_store_actix".to_string()).await
+            TodosMongoRepository {
+                dao: TodosMongoDAO::new("seedtodomongo".to_string(), "todos_store_actix".to_string()).await
+            }
         )
     );
 

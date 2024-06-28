@@ -1,4 +1,6 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Todo {
-    id: String,
-    name: String
+    pub name: String
 }

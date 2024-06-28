@@ -1,7 +1,4 @@
-use crate::api::shared::repository::dbos::Entity;
-use crate::api::shared::repository::mongo_repository::MongoRepository;
-
-pub mod mongo_repository;
+pub mod mongo_dao;
 pub mod dbos;
+pub mod mongo_entity_dao;
 
-pub type EntityMongoRepo<DATA> = MongoRepository<Entity<DATA, String>>;

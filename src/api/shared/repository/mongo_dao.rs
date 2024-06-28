@@ -5,16 +5,16 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use uuid::Uuid;
 use crate::core::shared::copy_from::CopyFromId;
-use crate::core::shared::repositories::repository::{ReadOnlyRepository, WriteOnlyRepository};
+use crate::core::shared::repositories::dao::{ReadOnlyDAO, WriteOnlyDAO};
 
-pub struct MongoRepository<DBO>
+pub struct MongoDAO<DBO>
 where
     DBO: Send + Sync,
 {
     collection: Collection<DBO>,
 }
 
-impl<DBO> MongoRepository<DBO>
+impl<DBO> MongoDAO<DBO>
 where
     DBO: Send + Sync,
 {
@@ -28,7 +28,7 @@ where
 }
 
 #[async_trait]
-impl<DBO> ReadOnlyRepository<DBO, String> for MongoRepository<DBO>
+impl<DBO> ReadOnlyDAO<DBO, String> for MongoDAO<DBO>
 where
     DBO: DeserializeOwned + Send + Sync
 {
@@ -42,7 +42,7 @@ where
 }
 
 #[async_trait]
-impl<DBO> WriteOnlyRepository<DBO, String> for MongoRepository<DBO>
+impl<DBO> WriteOnlyDAO<DBO, String> for MongoDAO<DBO>
 where
     DBO: Serialize + CopyFromId<String> + Send + Sync,
 {
@@ -60,7 +60,7 @@ trait IdGenerator {
     fn generate_id() -> String;
 }
 
-impl<DBO> IdGenerator for MongoRepository<DBO>
+impl<DBO> IdGenerator for MongoDAO<DBO>
 where
     DBO: Send + Sync {
     fn generate_id() -> String {

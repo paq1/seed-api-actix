@@ -1,15 +1,17 @@
-use std::sync::{Arc};
-use futures::lock::Mutex;
+use std::sync::Arc;
+
 use async_trait::async_trait;
-use crate::api::shared::repository::dbos::Entity;
-use crate::api::todos::todo_dbo::TodoDbo;
-use crate::core::shared::repositories::repository::WriteOnlyRepository;
+use futures::lock::Mutex;
+
+use crate::core::shared::data::Entity;
+use crate::core::todos::data::Todo;
 use crate::core::todos::services::TodosService;
+use crate::core::todos::todos_repository::TodosRepositoryWriteOnly;
 use crate::models::todos::commands::CreateTodo;
 
 pub struct TodosServiceImpl<STORE>
 where
-    STORE: WriteOnlyRepository<Entity<TodoDbo, String>, String>,
+    STORE: TodosRepositoryWriteOnly,
 {
     pub store: Arc<Mutex<STORE>>,
 }
@@ -17,18 +19,16 @@ where
 #[async_trait]
 impl<STORE> TodosService for TodosServiceImpl<STORE>
 where
-    STORE: WriteOnlyRepository<Entity<TodoDbo, String>, String> + Send,
+    STORE: TodosRepositoryWriteOnly + Send,
 {
     async fn create_todo(&self, command: CreateTodo) -> Result<String, String> {
-        let entity: Entity<TodoDbo, String> = Entity {
-            id_mongo: None,
-            version: 0,
+        let entity: Entity<Todo, String> = Entity {
             entity_id: "xxx".to_string(),
-            data: TodoDbo { name: command.name },
+            data: Todo { name: command.name },
         };
 
         Arc::clone(&self.store)
             .lock().await
-            .insert(entity).await
+            .insert_one(entity).await
     }
 }
