@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use futures::lock::Mutex;
 
 use crate::core::shared::data::Entity;
-use crate::core::todos::data::Todo;
+use crate::core::todos::data::{Todo, TodoStates};
 use crate::core::todos::services::TodosService;
 use crate::core::todos::todos_repository::TodosRepositoryWriteOnly;
 use crate::models::todos::commands::CreateTodo;
@@ -22,9 +22,9 @@ where
     STORE: TodosRepositoryWriteOnly + Send,
 {
     async fn create_todo(&self, command: CreateTodo) -> Result<String, String> {
-        let entity: Entity<Todo, String> = Entity {
+        let entity: Entity<TodoStates, String> = Entity {
             entity_id: "xxx".to_string(),
-            data: Todo { name: command.name },
+            data: TodoStates::Todo(Todo { name: command.name }),
         };
 
         Arc::clone(&self.store)
