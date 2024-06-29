@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use crate::api::shared::daos::dbos::EventDBO;
 use crate::api::todos::todo_dbo::TodoDboEvent;
 use crate::api::todos::todos_mongo_dao::TodosEventMongoDAO;
+use crate::core::shared::can_get_id::CanGetId;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::shared::data::EntityEvent;
 use crate::core::todos::data::TodoEvents;
@@ -23,6 +24,12 @@ impl TodosEventRepositoryReadOnly for TodosEventMongoRepository {
     }
 }
 
+impl CanGetId<String> for EventDBO<TodoDboEvent, String> {
+    fn id(&self) -> String {
+        self.event_id.clone()
+    }
+}
+
 #[async_trait]
 impl TodosEventRepositoryWriteOnly for TodosEventMongoRepository {
     async fn insert_one(&self, todo: EntityEvent<TodoEvents, String>) -> Result<String, String> {
@@ -33,7 +40,6 @@ impl TodosEventRepositoryWriteOnly for TodosEventMongoRepository {
             ..dao.clone()
         };
 
-        // Ok("xx".to_string())
         self.dao.insert(dao_sanitize_version).await
     }
 }

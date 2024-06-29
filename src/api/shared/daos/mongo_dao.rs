@@ -3,9 +3,8 @@ use mongodb::{Client, Collection};
 use mongodb::bson::doc;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
-use uuid::Uuid;
 
-use crate::core::shared::copy_from::CopyFromId;
+use crate::core::shared::can_get_id::CanGetId;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 
 pub struct MongoDAO<DBO>
@@ -45,26 +44,13 @@ where
 #[async_trait]
 impl<DBO> WriteOnlyDAO<DBO, String> for MongoDAO<DBO>
 where
-    DBO: Serialize + CopyFromId<String> + Send + Sync,
+    DBO: CanGetId<String> + Clone + Serialize + Send + Sync,
 {
     async fn insert(&self, entity: DBO) -> Result<String, String> {
-        let id_metier = Self::generate_id();
         self.collection
-            .insert_one(entity.copy_from_id(id_metier.clone()))
+            .insert_one(entity.clone())
             .await
             .map_err(|err| err.to_string())
-            .map(|_| id_metier)
-    }
-}
-
-trait IdGenerator {
-    fn generate_id() -> String;
-}
-
-impl<DBO> IdGenerator for MongoDAO<DBO>
-where
-    DBO: Send + Sync {
-    fn generate_id() -> String {
-        Uuid::new_v4().to_string()
+            .map(|_| entity.id())
     }
 }

@@ -21,7 +21,11 @@ pub async fn fetch_many() -> impl Responder {
 
 #[utoipa::path(
     responses(
-        (status = 200, description = "fait ca", body = Todo)
+        (
+          status = 200,
+          description = "Get the current state.",
+          body = Todo
+        )
     )
 )]
 #[get("/todos/{id}")]
@@ -31,7 +35,7 @@ pub async fn fetch_one(path: web::Path<String>, repo: web::Data<Arc<Mutex<TodosM
     let repo_lock = repo.lock().await;
 
     match repo_lock.fetch_one(id).await {
-        Ok(Some(res)) => HttpResponse::Ok().json(res.data.clone()),
+        Ok(Some(res)) => HttpResponse::Ok().json(res.clone()), // fixme mettre une vue ici
         Ok(_) => HttpResponse::NotFound().json(Error {title: "pas de data".to_string()}),
         Err(err) => HttpResponse::InternalServerError().json(Error {title: err})
     }
