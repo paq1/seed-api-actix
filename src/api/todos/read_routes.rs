@@ -6,8 +6,6 @@ use futures::lock::Mutex;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::core::todos::todos_repository::TodosRepositoryReadOnly;
 use crate::models::todos::views::errors::Error;
-use crate::models::todos::views::jsonapi::Many;
-use crate::models::todos::views::Todo;
 
 #[utoipa::path(
     responses(
@@ -15,8 +13,12 @@ use crate::models::todos::views::Todo;
     )
 )]
 #[get("/todos")]
-pub async fn fetch_many() -> impl Responder {
-    HttpResponse::Ok().json(Many::<Todo> { items: vec![] })
+pub async fn fetch_many(store: web::Data<Arc<Mutex<TodosMongoRepository>>>) -> impl Responder {
+    let store_lock = store.lock().await;
+    match store_lock.fetch_all().await {
+        Ok(items) => HttpResponse::Ok().json(items),
+        Err(err) => HttpResponse::InternalServerError().json(Error {title: err})
+    }
 }
 
 #[utoipa::path(

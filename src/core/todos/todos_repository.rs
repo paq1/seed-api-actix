@@ -6,6 +6,7 @@ use crate::core::todos::data::{TodoEvents, TodoStates};
 #[async_trait]
 pub trait TodosRepositoryReadOnly {
     async fn fetch_one(&self, id: String) -> Result<Option<Entity<TodoStates, String>>, String>;
+    async fn fetch_all(&self) -> Result<Vec<Entity<TodoStates, String>>, String>;
 }
 
 #[async_trait]

@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use futures::TryStreamExt;
 use mongodb::{Client, Collection};
 use mongodb::bson::doc;
 use serde::de::DeserializeOwned;
@@ -30,7 +31,7 @@ where
 #[async_trait]
 impl<DBO> ReadOnlyDAO<DBO, String> for MongoDAO<DBO>
 where
-    DBO: DeserializeOwned + Send + Sync
+    DBO: DeserializeOwned + Send + Sync,
 {
     async fn fetch_one(&self, id: String) -> Result<Option<DBO>, String> {
         let filter = doc! {"id": id};
@@ -38,6 +39,11 @@ where
             .find_one(filter)
             .await
             .map_err(|err| format!("err : {err}"))
+    }
+
+    async fn fetch_all(&self) -> Result<Vec<DBO>, String> {
+        self.find_all().await
+            .map_err(|err| err.to_string())
     }
 }
 
@@ -52,5 +58,21 @@ where
             .await
             .map_err(|err| err.to_string())
             .map(|_| entity.id())
+    }
+}
+
+
+impl<DBO> MongoDAO<DBO>
+where
+    DBO: DeserializeOwned + Send + Sync
+{
+    async fn find_all(&self) -> Result<Vec<DBO>, mongodb::error::Error> {
+        Ok(
+            self.collection
+                .find(doc! {})
+                .await?
+                .try_collect::<Vec<DBO>>()
+                .await.unwrap()
+        )
     }
 }

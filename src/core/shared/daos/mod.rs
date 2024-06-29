@@ -3,6 +3,7 @@ use async_trait::async_trait;
 #[async_trait]
 pub trait ReadOnlyDAO<DBO, ID> {
     async fn fetch_one(&self, id: ID) -> Result<Option<DBO>, String>;
+    async fn fetch_all(&self) -> Result<Vec<DBO>, String>;
 }
 
 #[async_trait]

@@ -6,6 +6,6 @@ pub struct Many<T>
 where
     T: Serialize + Clone
 {
-    #[schema(example = "xxx")]
+    #[schema(example = "[]")]
     pub items: Vec<T>,
 }

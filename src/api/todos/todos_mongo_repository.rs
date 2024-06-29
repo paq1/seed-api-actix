@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use crate::api::shared::daos::dbos::EntityDBO;
-use crate::api::todos::todo_dbo::{TodoDboState};
+use crate::api::todos::todo_dbo::TodoDboState;
 use crate::api::todos::todos_mongo_dao::TodosMongoDAO;
 use crate::core::shared::can_get_id::CanGetId;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
@@ -19,6 +19,18 @@ impl TodosRepositoryReadOnly for TodosMongoRepository {
         self.dao
             .fetch_one(id).await
             .map(|maybedata| maybedata.map(|x| Entity { entity_id: x.entity_id, data: x.data.into() }))
+    }
+
+    async fn fetch_all(&self) -> Result<Vec<Entity<TodoStates, String>>, String> {
+        self.dao
+            .fetch_all()
+            .await
+            .map(|items| {
+                items
+                    .into_iter()
+                    .map(|dbo| Entity { entity_id: dbo.entity_id, data: dbo.data.into() })
+                    .collect()
+            })
     }
 }
 
