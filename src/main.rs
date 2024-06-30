@@ -13,6 +13,7 @@ use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_dao::{TodosEventMongoDAO, TodosMongoDAO};
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::api::todos::write_routes::insert_one;
+use crate::models::shared::errors::StandardHttpError;
 
 mod core;
 mod api;
@@ -53,7 +54,10 @@ async fn main() -> std::io::Result<()> {
             .allowed_methods(vec!["GET", "POST"])
             .supports_credentials();
 
+        let standard_http_error = StandardHttpError::new();
+
         App::new()
+            .app_data(web::Data::new(standard_http_error))
             .app_data(
                 web::Data::new(Arc::clone(&repo))
             )

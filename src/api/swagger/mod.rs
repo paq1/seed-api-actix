@@ -6,7 +6,7 @@ use crate::api::todos::read_routes::__path_fetch_one;
 use crate::api::todos::write_routes::__path_insert_one;
 use crate::models::todos::commands::CreateTodo;
 use crate::models::todos::views::{Todo, TokenClaims};
-use crate::models::todos::views::jsonapi::Many;
+use crate::models::shared::jsonapi::Many;
 
 #[derive(utoipa::OpenApi)]
 #[openapi(

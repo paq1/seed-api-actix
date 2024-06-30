@@ -7,8 +7,8 @@ use crate::api::todos::services::TodosServiceImpl;
 use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::core::todos::services::TodosService;
+use crate::models::shared::errors::StandardHttpError;
 use crate::models::todos::commands::CreateTodo;
-use crate::models::todos::views::errors::Error;
 use crate::models::todos::views::Todo;
 
 #[utoipa::path(
@@ -20,7 +20,8 @@ use crate::models::todos::views::Todo;
 #[post("/todos")]
 pub async fn insert_one(
     body: web::Json<CreateTodo>,
-    todos_service: web::Data<Arc<Mutex<TodosServiceImpl<TodosMongoRepository, TodosEventMongoRepository>>>>
+    todos_service: web::Data<Arc<Mutex<TodosServiceImpl<TodosMongoRepository, TodosEventMongoRepository>>>>,
+    http_error: web::Data<StandardHttpError>
 ) -> impl Responder {
     let command = body.into_inner();
     let lock = todos_service.lock().await;
@@ -29,6 +30,6 @@ pub async fn insert_one(
 
     match result_insert {
         Ok(res) => HttpResponse::Created().json(Todo { name: res }),
-        Err(err) => HttpResponse::InternalServerError().json(Error { title: err })
+        Err(_) => HttpResponse::InternalServerError().json(http_error.internal_server_error.clone())
     }
 }
