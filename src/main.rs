@@ -21,6 +21,8 @@ mod models;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv::dotenv().ok();
+
     let repo: Arc<Mutex<TodosMongoRepository>> = Arc::new(
         Mutex::new(
             TodosMongoRepository {
