@@ -5,7 +5,7 @@ use actix_web::{App, HttpServer, web};
 use futures::lock::Mutex;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
-
+use crate::api::shared::token::JwtTokenService;
 use crate::api::swagger::ApiDoc;
 use crate::api::todos::read_routes::{fetch_many, fetch_one};
 use crate::api::todos::services::TodosServiceImpl;
@@ -55,14 +55,16 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin()
-            .allowed_methods(vec!["GET", "POST"])
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             .supports_credentials();
 
         let standard_http_error = StandardHttpError::new();
+        let jwt_token_service = JwtTokenService::new("test".to_string());
 
 
         App::new()
             .app_data(web::Data::new(standard_http_error))
+            .app_data(web::Data::new(jwt_token_service))
             .app_data(
                 web::Data::new(Arc::clone(&repo))
             )
