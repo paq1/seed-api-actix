@@ -4,6 +4,7 @@ use async_trait::async_trait;
 use futures::lock::Mutex;
 use uuid::Uuid;
 
+use crate::core::shared::context::Context;
 use crate::core::shared::data::{Entity, EntityEvent};
 use crate::core::shared::id_generator::IdGenerator;
 use crate::core::todos::data::{TodoEvents, TodoStates};
@@ -26,7 +27,7 @@ where
     STORE: TodosRepositoryWriteOnly + Send,
     JOURNAL: TodosEventRepositoryWriteOnly + Send,
 {
-    async fn create_todo(&self, command: CreateTodo) -> Result<String, String> {
+    async fn create_todo(&self, command: CreateTodo, context: Context) -> Result<String, String> {
 
         // fixme mettre des erreurs standard: String -> CustomError / Failure
         let entity_id = Self::generate_id();
@@ -40,7 +41,7 @@ where
         let event: EntityEvent<TodoEvents, String> = EntityEvent {
             entity_id: entity_id.clone(),
             event_id: event_id.clone(),
-            data: TodoEvents::Created { by: "mkd".to_string(), at: "xxx".to_string() },
+            data: TodoEvents::Created { by: context.subject, at: context.now },
         };
 
 

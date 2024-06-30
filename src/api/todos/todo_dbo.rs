@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -11,6 +12,6 @@ pub enum TodoDboState {
 pub enum TodoDboEvent {
     TodoCreatedDbo {
         by: String,
-        at: String,
+        at: DateTime<Utc>,
     }
 }

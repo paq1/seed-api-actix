@@ -1,4 +1,5 @@
 pub mod authenticated;
+pub mod jwt_claims;
 
 use std::fmt::Debug;
 use jsonwebtoken::{decode, DecodingKey, Validation};

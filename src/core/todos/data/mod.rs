@@ -1,3 +1,5 @@
+use chrono::{DateTime, Utc};
+use chrono::serde::ts_seconds;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -9,6 +11,7 @@ pub enum TodoStates {
 pub enum TodoEvents {
     Created {
         by: String,
-        at: String
+        #[serde(with = "ts_seconds")]
+        at: DateTime<Utc>
     }
 }

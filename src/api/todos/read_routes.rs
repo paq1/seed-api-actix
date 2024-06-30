@@ -38,7 +38,7 @@ pub async fn fetch_one(path: web::Path<String>, repo: web::Data<Arc<Mutex<TodosM
 
 
     match repo_lock.fetch_one(id).await {
-        Ok(Some(res)) => HttpResponse::Ok().json(res.clone()), // fixme mettre une vue ici
+        Ok(Some(res)) => HttpResponse::Ok().json(res.clone()),
         Ok(_) => HttpResponse::NotFound().json(http_error.not_found.clone()),
         Err(_) => HttpResponse::InternalServerError().json(http_error.internal_server_error.clone())
     }

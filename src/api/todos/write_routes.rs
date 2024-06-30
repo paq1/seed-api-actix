@@ -31,11 +31,11 @@ pub async fn insert_one(
     http_error: web::Data<StandardHttpError>,
 ) -> impl Responder {
     match authenticated(&req, jwt_token_service.get_ref()) {
-        Ok(_ctx) => {
+        Ok(ctx) => {
             let command = body.into_inner();
             let lock = todos_service.lock().await;
 
-            let result_insert = lock.create_todo(command).await;
+            let result_insert = lock.create_todo(command, ctx).await;
 
             match result_insert {
                 Ok(res) => HttpResponse::Created().json(Todo { name: res }),

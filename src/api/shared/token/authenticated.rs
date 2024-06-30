@@ -1,7 +1,8 @@
 use actix_web::HttpRequest;
 
 use crate::api::shared::token::JwtTokenService;
-use crate::core::shared::token::context::Context;
+use crate::api::shared::token::jwt_claims::JwtClaims;
+use crate::core::shared::context::Context;
 use crate::core::shared::token::TokenService;
 use crate::models::shared::errors::Error;
 
@@ -30,7 +31,7 @@ pub fn authenticated(
                 .unwrap_or(&"");
 
             jwt_token_service
-                .decode::<Context>(jwt)
+                .decode::<JwtClaims>(jwt)
                 .map_err(|err| Error::new(
                         err,
                         "".to_string(),
@@ -38,6 +39,7 @@ pub fn authenticated(
                         Some(401)
                     )
                 )
+                .map(|claims| claims.into())
         }
         _ => Err(
             Error::new(

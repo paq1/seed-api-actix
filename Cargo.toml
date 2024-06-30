@@ -21,6 +21,7 @@ serde_json = "1.0.118"
 futures = "0.3.30"
 dotenv = "0.15.0"
 jsonwebtoken = "9.3.0"
+chrono = { version = "0.4.38", features = ["serde"] }
 
 [dependencies.mongodb]
 version = "3.0.0"
