@@ -50,21 +50,22 @@ where
 #[async_trait]
 impl<DBO> WriteOnlyDAO<DBO, String> for MongoDAO<DBO>
 where
-    DBO: CanGetId<String> + Clone + Serialize + Send + Sync,
+    DBO: CanGetId<String> + Serialize
+,
 {
     async fn insert(&self, entity: DBO) -> Result<String, String> {
         self.collection
             .insert_one(entity.clone())
             .await
             .map_err(|err| err.to_string())
-            .map(|_| entity.id())
+            .map(|_| entity.id().clone())
     }
 }
 
 
 impl<DBO> MongoDAO<DBO>
 where
-    DBO: DeserializeOwned + Send + Sync
+    DBO: DeserializeOwned + Send + Sync,
 {
     async fn find_all(&self) -> Result<Vec<DBO>, mongodb::error::Error> {
         Ok(

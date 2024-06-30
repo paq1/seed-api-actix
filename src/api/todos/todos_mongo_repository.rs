@@ -35,8 +35,8 @@ impl TodosRepositoryReadOnly for TodosMongoRepository {
 }
 
 impl CanGetId<String> for EntityDBO<TodoDboState, String> {
-    fn id(&self) -> String {
-        self.entity_id.clone()
+    fn id(&self) -> &String {
+        &self.entity_id
     }
 }
 

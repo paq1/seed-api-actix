@@ -25,8 +25,8 @@ impl TodosEventRepositoryReadOnly for TodosEventMongoRepository {
 }
 
 impl CanGetId<String> for EventDBO<TodoDboEvent, String> {
-    fn id(&self) -> String {
-        self.event_id.clone()
+    fn id(&self) -> &String {
+        &self.event_id
     }
 }
 
