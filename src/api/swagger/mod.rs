@@ -4,7 +4,8 @@ use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 use crate::api::todos::read_routes::__path_fetch_many;
 use crate::api::todos::read_routes::__path_fetch_one;
 use crate::api::todos::write_routes::__path_insert_one;
-use crate::models::todos::commands::CreateTodo;
+use crate::api::todos::write_routes::__path_update_one;
+use crate::models::todos::commands::{CreateTodoCommand, UpdateTodoCommand, DeleteTodoCommand};
 use crate::models::todos::views::{Todo, TokenClaims};
 use crate::models::shared::jsonapi::Many;
 
@@ -13,14 +14,17 @@ use crate::models::shared::jsonapi::Many;
     paths(
         fetch_many,
         fetch_one,
-        insert_one
+        insert_one,
+        update_one
     ),
     components(
         schemas(
             TokenClaims,
             Many<Todo>,
             Todo,
-            CreateTodo
+            CreateTodoCommand,
+            UpdateTodoCommand,
+            DeleteTodoCommand
         )
     ),
     modifiers(&SecurityAddon)

@@ -12,6 +12,8 @@ pub trait TodosRepositoryReadOnly {
 #[async_trait]
 pub trait TodosRepositoryWriteOnly {
     async fn insert_one(&self, todo: Entity<TodoStates, String>) -> Result<String, String>;
+    async fn update_one(&self, id: String, todo: Entity<TodoStates, String>) -> Result<String, String>;
+    async fn delete_one(&self, id: String) -> Result<String, String>;
 }
 
 #[async_trait]

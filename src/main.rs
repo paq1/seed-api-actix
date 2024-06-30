@@ -12,7 +12,7 @@ use crate::api::todos::services::TodosServiceImpl;
 use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_dao::{TodosEventMongoDAO, TodosMongoDAO};
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
-use crate::api::todos::write_routes::insert_one;
+use crate::api::todos::write_routes::{insert_one, update_one};
 use crate::models::shared::errors::StandardHttpError;
 
 mod core;
@@ -79,6 +79,7 @@ async fn main() -> std::io::Result<()> {
             .service(fetch_one)
             .service(fetch_many)
             .service(insert_one)
+            .service(update_one)
     })
         .workers(2)
         .bind((api_address, api_port))?

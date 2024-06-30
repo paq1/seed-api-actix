@@ -60,6 +60,20 @@ where
             .map_err(|err| err.to_string())
             .map(|_| entity.id().clone())
     }
+
+    async fn update(&self, id: String, entity: DBO) -> Result<String, String> {
+        let filter =  doc! { "id": id.clone() };
+        self.collection
+            .replace_one(filter, entity)
+            .await
+            .map(|_| id.clone())
+            .map_err(|err| err.to_string())
+    }
+
+    async fn delete(&self, id: String) -> Result<String, String> {
+        let filter =  doc! { "id": id.clone() };
+        self.collection.delete_one(filter).await.map(|_| id).map_err(|err| err.to_string())
+    }
 }
 
 

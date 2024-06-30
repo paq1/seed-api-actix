@@ -18,7 +18,7 @@ impl TodosRepositoryReadOnly for TodosMongoRepository {
     async fn fetch_one(&self, id: String) -> Result<Option<Entity<TodoStates, String>>, String> {
         self.dao
             .fetch_one(id).await
-            .map(|maybedata| maybedata.map(|x| Entity { entity_id: x.entity_id, data: x.data.into() }))
+            .map(|maybedata| maybedata.map(|dbo| dbo.into()))
     }
 
     async fn fetch_all(&self) -> Result<Vec<Entity<TodoStates, String>>, String> {
@@ -28,7 +28,7 @@ impl TodosRepositoryReadOnly for TodosMongoRepository {
             .map(|items| {
                 items
                     .into_iter()
-                    .map(|dbo| Entity { entity_id: dbo.entity_id, data: dbo.data.into() })
+                    .map(|dbo| dbo.into())
                     .collect()
             })
     }
@@ -51,5 +51,19 @@ impl TodosRepositoryWriteOnly for TodosMongoRepository {
         };
 
         self.dao.insert(sanitize_version).await
+    }
+
+    async fn update_one(&self, id: String, todo: Entity<TodoStates, String>) -> Result<String, String> {
+        let entity_dbo: EntityDBO<TodoDboState, String> = todo.into();
+        let sanitize_version: EntityDBO<TodoDboState, String> = EntityDBO {
+            version: entity_dbo.clone().version.map(|old| old + 1),
+            ..entity_dbo.clone()
+        };
+
+        self.dao.update(id, sanitize_version).await
+    }
+
+    async fn delete_one(&self, id: String) -> Result<String, String> {
+        self.dao.delete(id).await
     }
 }

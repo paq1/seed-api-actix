@@ -13,5 +13,12 @@ pub enum TodoDboEvent {
     TodoCreatedDbo {
         by: String,
         at: DateTime<Utc>,
-    }
+    },
+    Updated(TodoUpdatedDbo)
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TodoUpdatedDbo {
+    pub by: String,
+    pub at: DateTime<Utc>,
 }

@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct Entity<S, REF> {
     pub entity_id: REF,
     pub data: S,
+    pub version: Option<u32>
 }
 
 #[derive(Serialize, Deserialize, Clone)]

@@ -13,5 +13,13 @@ pub enum TodoEvents {
         by: String,
         #[serde(with = "ts_seconds")]
         at: DateTime<Utc>
-    }
+    },
+    Updated (UpdatedEvent)
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct UpdatedEvent {
+    pub by: String,
+    #[serde(with = "ts_seconds")]
+    pub at: DateTime<Utc>
 }
