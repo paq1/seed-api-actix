@@ -49,6 +49,8 @@ async fn main() -> std::io::Result<()> {
     );
 
     let openapi = ApiDoc::openapi();
+    let api_address = std::env::var("API_ADDRESS").unwrap();
+    let api_port = std::env::var("API_PORT").unwrap().parse::<u16>().unwrap();
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -57,6 +59,7 @@ async fn main() -> std::io::Result<()> {
             .supports_credentials();
 
         let standard_http_error = StandardHttpError::new();
+
 
         App::new()
             .app_data(web::Data::new(standard_http_error))
@@ -76,7 +79,7 @@ async fn main() -> std::io::Result<()> {
             .service(insert_one)
     })
         .workers(2)
-        .bind(("127.0.0.1", 8080))?
+        .bind((api_address, api_port))?
         .run()
         .await
 }
