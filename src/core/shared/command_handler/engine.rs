@@ -46,6 +46,10 @@ where
 
         let new_state = (self.reducer.compute_new_state)(maybe_state, event);
 
+        // todo persist state
+
+        // todo persist event
+
 
         Ok("test".to_string())
     }
