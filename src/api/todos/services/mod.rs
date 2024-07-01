@@ -5,19 +5,18 @@ use futures::lock::Mutex;
 use uuid::Uuid;
 
 use crate::core::shared::context::Context;
-use crate::core::shared::daos::{ReadOnlyEntityRepo, WriteOnlyEntityRepo};
+use crate::core::shared::daos::{ReadOnlyEntityRepo, WriteOnlyEntityRepo, WriteOnlyEventRepo};
 use crate::core::shared::data::{Entity, EntityEvent};
 use crate::core::shared::id_generator::IdGenerator;
 use crate::core::todos::data::{TodoEvents, TodoStates, UpdatedEvent};
 use crate::core::todos::data::TodoStates::Todo;
 use crate::core::todos::services::TodosService;
-use crate::core::todos::todos_repository::TodosEventRepositoryWriteOnly;
 use crate::models::todos::commands::*;
 
 pub struct TodosServiceImpl<STORE, JOURNAL>
 where
     STORE: WriteOnlyEntityRepo<TodoStates, String> + ReadOnlyEntityRepo<TodoStates, String>,
-    JOURNAL: TodosEventRepositoryWriteOnly,
+    JOURNAL: WriteOnlyEventRepo<TodoEvents, String>,
 {
     pub store: Arc<Mutex<STORE>>,
     pub journal: Arc<Mutex<JOURNAL>>,
@@ -27,7 +26,7 @@ where
 impl<STORE, JOURNAL> TodosService for TodosServiceImpl<STORE, JOURNAL>
 where
     STORE: WriteOnlyEntityRepo<TodoStates, String> + ReadOnlyEntityRepo<TodoStates, String> + Send,
-    JOURNAL: TodosEventRepositoryWriteOnly + Send,
+    JOURNAL: WriteOnlyEventRepo<TodoEvents, String> + Send,
 {
     async fn create_todo(&self, command: CreateTodoCommand, context: Context) -> Result<String, String> {
 
@@ -50,7 +49,7 @@ where
 
         let insert_journal = Arc::clone(&self.journal)
             .lock().await
-            .insert_one(event).await;
+            .insert(event).await;
 
         let store = Arc::clone(&self.store)
             .lock().await
@@ -88,7 +87,7 @@ where
                         }
                     ).await;
 
-                self.journal.lock().await.insert_one(event).await.and_then(|_| update_state)
+                self.journal.lock().await.insert(event).await.and_then(|_| update_state)
             },
             None => Err("not found".to_string())
         }
@@ -102,7 +101,7 @@ where
 impl<STORE, JOURNAL> IdGenerator for TodosServiceImpl<STORE, JOURNAL>
 where
     STORE: WriteOnlyEntityRepo<TodoStates, String> + ReadOnlyEntityRepo<TodoStates, String>,
-    JOURNAL: TodosEventRepositoryWriteOnly
+    JOURNAL: WriteOnlyEventRepo<TodoEvents, String>
 {
     fn generate_id() -> String {
         Uuid::new_v4().to_string()
