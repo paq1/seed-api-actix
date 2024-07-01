@@ -5,3 +5,4 @@ pub mod write_routes;
 pub mod services;
 pub mod todos_mongo_repository;
 pub mod todo_event_mongo_repository;
+pub mod mappers;
