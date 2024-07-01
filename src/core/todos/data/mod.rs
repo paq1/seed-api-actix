@@ -12,7 +12,8 @@ pub enum TodoEvents {
     Created {
         by: String,
         #[serde(with = "ts_seconds")]
-        at: DateTime<Utc>
+        at: DateTime<Utc>,
+        name: String
     },
     Updated (UpdatedEvent)
 }
@@ -21,5 +22,6 @@ pub enum TodoEvents {
 pub struct UpdatedEvent {
     pub by: String,
     #[serde(with = "ts_seconds")]
-    pub at: DateTime<Utc>
+    pub at: DateTime<Utc>,
+    pub name: String
 }

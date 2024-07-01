@@ -6,8 +6,8 @@ use crate::core::todos::data::{TodoEvents, UpdatedEvent};
 impl From<TodoDboEvent> for TodoEvents {
     fn from(value: TodoDboEvent) -> Self {
         match value {
-            TodoDboEvent::TodoCreatedDbo { by, at } => TodoEvents::Created { by, at },
-            TodoDboEvent::Updated(event_dbo) => TodoEvents::Updated(UpdatedEvent { by: event_dbo.by, at: event_dbo.at })
+            TodoDboEvent::TodoCreatedDbo { by, at } => TodoEvents::Created { by, at, name: "bruh".to_string() }, // fixme set name in database (dbo)
+            TodoDboEvent::Updated(event_dbo) => TodoEvents::Updated(UpdatedEvent { by: event_dbo.by, at: event_dbo.at, name: "bruh".to_string() }) // fixme set name in database (dbo)
         }
     }
 }
@@ -38,7 +38,7 @@ impl From<EntityEvent<TodoEvents, String>> for EventDBO<TodoDboEvent, String> {
 impl From<TodoEvents> for TodoDboEvent {
     fn from(value: TodoEvents) -> Self {
         match value {
-            TodoEvents::Created { by, at } => TodoDboEvent::TodoCreatedDbo { by, at },
+            TodoEvents::Created { by, at, name } => TodoDboEvent::TodoCreatedDbo { by, at },
             TodoEvents::Updated(updated) => TodoDboEvent::Updated(TodoUpdatedDbo { by: updated.by, at: updated.at })
         }
     }

@@ -5,17 +5,18 @@ use futures::lock::Mutex;
 use uuid::Uuid;
 
 use crate::core::shared::context::Context;
+use crate::core::shared::daos::{ReadOnlyEntityRepo, WriteOnlyEntityRepo};
 use crate::core::shared::data::{Entity, EntityEvent};
 use crate::core::shared::id_generator::IdGenerator;
 use crate::core::todos::data::{TodoEvents, TodoStates, UpdatedEvent};
 use crate::core::todos::data::TodoStates::Todo;
 use crate::core::todos::services::TodosService;
-use crate::core::todos::todos_repository::{TodosEventRepositoryWriteOnly, TodosRepositoryReadOnly, TodosRepositoryWriteOnly};
+use crate::core::todos::todos_repository::TodosEventRepositoryWriteOnly;
 use crate::models::todos::commands::*;
 
 pub struct TodosServiceImpl<STORE, JOURNAL>
 where
-    STORE: TodosRepositoryWriteOnly + TodosRepositoryReadOnly,
+    STORE: WriteOnlyEntityRepo<TodoStates, String> + ReadOnlyEntityRepo<TodoStates, String>,
     JOURNAL: TodosEventRepositoryWriteOnly,
 {
     pub store: Arc<Mutex<STORE>>,
@@ -25,7 +26,7 @@ where
 #[async_trait]
 impl<STORE, JOURNAL> TodosService for TodosServiceImpl<STORE, JOURNAL>
 where
-    STORE: TodosRepositoryWriteOnly + TodosRepositoryReadOnly + Send,
+    STORE: WriteOnlyEntityRepo<TodoStates, String> + ReadOnlyEntityRepo<TodoStates, String> + Send,
     JOURNAL: TodosEventRepositoryWriteOnly + Send,
 {
     async fn create_todo(&self, command: CreateTodoCommand, context: Context) -> Result<String, String> {
@@ -36,14 +37,14 @@ where
 
         let entity: Entity<TodoStates, String> = Entity {
             entity_id: entity_id.clone(),
-            data: TodoStates::Todo { name: command.name },
+            data: TodoStates::Todo { name: command.name.clone() },
             version: None,
         };
 
         let event: EntityEvent<TodoEvents, String> = EntityEvent {
             entity_id: entity_id.clone(),
             event_id: event_id.clone(),
-            data: TodoEvents::Created { by: context.subject, at: context.now },
+            data: TodoEvents::Created { by: context.subject, at: context.now, name: command.name.clone() },
         };
 
 
@@ -53,7 +54,7 @@ where
 
         let store = Arc::clone(&self.store)
             .lock().await
-            .insert_one(entity).await;
+            .insert(entity).await;
 
         insert_journal.and_then(|_| store)
     }
@@ -68,11 +69,11 @@ where
                 let event: EntityEvent<TodoEvents, String> = EntityEvent {
                     entity_id: id.clone(),
                     event_id: event_id.clone(),
-                    data: TodoEvents::Updated(UpdatedEvent { by: ctx.subject, at: ctx.now }),
+                    data: TodoEvents::Updated(UpdatedEvent { by: ctx.subject, at: ctx.now, name: command.name.clone() }),
                 };
 
                 let update_state = self.store.lock().await
-                    .update_one(
+                    .update(
                         id.clone(),
                         Entity {
                             data:
@@ -100,7 +101,7 @@ where
 
 impl<STORE, JOURNAL> IdGenerator for TodosServiceImpl<STORE, JOURNAL>
 where
-    STORE: TodosRepositoryWriteOnly + TodosRepositoryReadOnly,
+    STORE: WriteOnlyEntityRepo<TodoStates, String> + ReadOnlyEntityRepo<TodoStates, String>,
     JOURNAL: TodosEventRepositoryWriteOnly
 {
     fn generate_id() -> String {

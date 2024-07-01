@@ -1,50 +1,21 @@
+mod engine;
+
 use async_trait::async_trait;
+use crate::core::shared::context::Context;
 
-
-#[async_trait]
-pub trait CommandHandler<STATE, COMMAND, EVT> {
-    async fn handle(&self, cmd: COMMAND) -> EVT;
-}
-
-#[async_trait]
-impl<STATE, COMMAND, EVT> CommandHandler<STATE, COMMAND, EVT> for dyn CommandHandlerCreate<STATE, COMMAND, EVT>
-where
-    EVT: Send + Sync + Clone,
-    COMMAND: Send + Sync + Clone
-{
-    async fn handle(&self, cmd: COMMAND) -> EVT {
-        self.on_command(cmd).await.clone()
-    }
+pub enum CommandHandler<STATE, COMMAND, EVT> {
+    Create(Box<dyn CommandHandlerCreate<STATE, COMMAND, EVT>>),
+    Update(Box<dyn CommandHandlerUpdate<STATE, COMMAND, EVT>>),
 }
 
 #[async_trait]
 pub trait CommandHandlerCreate<STATE, COMMAND, EVT>: Send + Sync {
-
-    async fn on_command(&self, command: COMMAND) -> EVT;
-
+    fn name(&self) -> String;
+    async fn on_command(&self, id: String, command: COMMAND, context: Context) -> Result<EVT, String>;
 }
 
 #[async_trait]
-pub trait CommandHandlerUpdate<STATE, COMMAND, EVT> {
-
-    async fn on_command(&self, command: COMMAND) -> EVT;
-
+pub trait CommandHandlerUpdate<STATE, COMMAND, EVT>: Send + Sync {
+    fn name(&self) -> String;
+    async fn on_command(&self, id: String, state: STATE, command: COMMAND, context: Context) -> Result<EVT, String>;
 }
-
-struct A;
-
-#[async_trait]
-impl CommandHandlerCreate<String, String, String> for A {
-    async fn on_command(&self, command: String) -> String {
-        "todo!()".to_string()
-    }
-}
-
-struct B;
-#[async_trait]
-impl CommandHandlerUpdate<String, String, String> for B {
-    async fn on_command(&self, command: String) -> String {
-        "todo!()".to_string()
-    }
-}
-
