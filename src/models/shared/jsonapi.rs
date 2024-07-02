@@ -18,9 +18,9 @@ impl<T: Serialize + Clone> Many<T> {
             data: paged.data,
             meta: Some(
                 Pagination {
-                    total_pages: 1,
-                    number: paged.meta.page_number,
-                    size: paged.meta.page_size
+                    total_pages: paged.meta.total_pages,
+                    number: paged.meta.number,
+                    size: paged.meta.size
                 }
             ),
         }

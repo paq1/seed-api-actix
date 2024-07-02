@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 use crate::core::shared::data::{Entity, EntityEvent};
-use crate::core::shared::repositories::query::{Paged, Query};
+use crate::core::shared::repositories::query::{InfoPaged, Paged, Query};
 use crate::models::shared::errors::ResultErr;
 
 pub mod query;
@@ -15,6 +15,7 @@ pub trait ReadOnlyEntityRepo<DATA: Clone, ID: Clone> {
         let entities = self.fetch_all().await?;
         let start = (query.pagination.page_number - 1) * query.pagination.page_size;
         let end = start.clone() + query.pagination.page_size;
+        let max_page = f64::ceil(entities.len() as f64 / query.pagination.page_size as f64) as usize;
 
         let paged_entities = if entities.is_empty() {
             vec![]
@@ -34,7 +35,11 @@ pub trait ReadOnlyEntityRepo<DATA: Clone, ID: Clone> {
         Ok(
             Paged {
                 data: paged_entities,
-                meta: query.pagination
+                meta: InfoPaged {
+                    total_pages: max_page,
+                    number: query.pagination.page_number,
+                    size: query.pagination.page_size
+                }
             }
         )
 

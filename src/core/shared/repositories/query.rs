@@ -1,6 +1,12 @@
 pub struct Paged<T> {
     pub data: Vec<T>,
-    pub meta: PaginationDef
+    pub meta: InfoPaged
+}
+
+pub struct InfoPaged {
+    pub total_pages: usize,
+    pub number: usize,
+    pub size: usize,
 }
 
 pub struct Query {
