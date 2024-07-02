@@ -1,7 +1,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Entity<S, REF> {
+pub struct Entity<S, REF>
+where
+    S: Clone,
+    REF: Clone
+{
     pub entity_id: REF,
     pub data: S,
     pub version: Option<u32>

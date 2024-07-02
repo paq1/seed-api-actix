@@ -9,7 +9,7 @@ use crate::core::shared::repositories::{ReadOnlyEntityRepo, WriteOnlyEntityRepo,
 use crate::models::shared::errors::{Error, ResultErr};
 
 pub struct Engine<
-    STATE,
+    STATE: Clone,
     COMMAND,
     EVENT,
     STORE,
