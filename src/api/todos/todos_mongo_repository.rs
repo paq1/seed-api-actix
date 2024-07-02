@@ -8,7 +8,7 @@ use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::shared::data::Entity;
 use crate::core::shared::repositories::{ReadOnlyEntityRepo, WriteOnlyEntityRepo};
 use crate::core::todos::data::TodoStates;
-use crate::models::shared::errors::{Error, ResultErr};
+use crate::models::shared::errors::ResultErr;
 
 pub struct TodosMongoRepository {
     pub dao: TodosMongoDAO,

@@ -6,7 +6,7 @@ pub type ResultErr<DATA> = Result<DATA, Error>;
 pub enum Error {
     Http(ErrorHttpCustom),
     Simple(String),
-    Problem(Problem)
+    // Problem(Problem)
 }
 
 
