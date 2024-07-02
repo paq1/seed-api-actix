@@ -3,6 +3,7 @@ use async_trait::async_trait;
 use crate::core::shared::context::Context;
 use crate::core::shared::event_sourcing::{CommandHandlerCreate, CommandHandlerUpdate};
 use crate::core::todos::data::{TodoEvents, TodoStates, UpdatedEvent};
+use crate::models::shared::errors::{Error, ResultErr};
 use crate::models::todos::commands::TodoCommands;
 
 pub struct CreateTodoHandler;
@@ -13,14 +14,14 @@ impl CommandHandlerCreate<TodoStates, TodoCommands, TodoEvents> for CreateTodoHa
         "create".to_string()
     }
 
-    async fn on_command(&self, _id: String, command: TodoCommands, context: Context) -> Result<TodoEvents, String> {
+    async fn on_command(&self, _id: String, command: TodoCommands, context: Context) -> ResultErr<TodoEvents> {
         println!("pouet");
 
         match command {
             TodoCommands::Create(c) => Ok(
                 TodoEvents::Created { by: context.subject, at: context.now, name: c.name }
             ),
-            _ => Err("bad request".to_string())
+            _ => Err(Error::Simple("bad request".to_string()))
         }
     }
 }
@@ -32,14 +33,14 @@ impl CommandHandlerUpdate<TodoStates, TodoCommands, TodoEvents> for UpdateTodoHa
         "update".to_string()
     }
 
-    async fn on_command(&self, _id: String, _state: TodoStates, command: TodoCommands, context: Context) -> Result<TodoEvents, String> {
+    async fn on_command(&self, _id: String, _state: TodoStates, command: TodoCommands, context: Context) -> ResultErr<TodoEvents> {
         println!("pouet");
 
         match command {
             TodoCommands::Update(c) => Ok(
                 TodoEvents::Updated (UpdatedEvent {by: context.subject, at: context.now, name: c.name})
             ),
-            _ => Err("bad request".to_string())
+            _ => Err(Error::Simple("bad request".to_string()))
         }
     }
 }

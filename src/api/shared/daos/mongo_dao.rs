@@ -7,6 +7,7 @@ use serde::Serialize;
 
 use crate::core::shared::can_get_id::CanGetId;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
+use crate::models::shared::errors::{Error, ResultErr};
 
 pub struct MongoDAO<DBO>
 where
@@ -33,17 +34,17 @@ impl<DBO> ReadOnlyDAO<DBO, String> for MongoDAO<DBO>
 where
     DBO: DeserializeOwned + Send + Sync,
 {
-    async fn fetch_one(&self, id: String) -> Result<Option<DBO>, String> {
+    async fn fetch_one(&self, id: String) -> ResultErr<Option<DBO>> {
         let filter = doc! {"id": id};
         self.collection
             .find_one(filter)
             .await
-            .map_err(|err| format!("err : {err}"))
+            .map_err(|err| Error::Simple(err.to_string()))
     }
 
-    async fn fetch_all(&self) -> Result<Vec<DBO>, String> {
+    async fn fetch_all(&self) -> ResultErr<Vec<DBO>> {
         self.find_all().await
-            .map_err(|err| err.to_string())
+            .map_err(|err| Error::Simple(err.to_string()))
     }
 }
 
@@ -53,26 +54,28 @@ where
     DBO: CanGetId<String> + Serialize
 ,
 {
-    async fn insert(&self, entity: DBO) -> Result<String, String> {
+    async fn insert(&self, entity: DBO) -> ResultErr<String> {
         self.collection
             .insert_one(entity.clone())
             .await
-            .map_err(|err| err.to_string())
+            .map_err(|err| Error::Simple(err.to_string()))
             .map(|_| entity.id().clone())
     }
 
-    async fn update(&self, id: String, entity: DBO) -> Result<String, String> {
+    async fn update(&self, id: String, entity: DBO) -> ResultErr<String> {
         let filter =  doc! { "id": id.clone() };
         self.collection
             .replace_one(filter, entity)
             .await
             .map(|_| id.clone())
-            .map_err(|err| err.to_string())
+            .map_err(|err| Error::Simple(err.to_string()))
     }
 
-    async fn delete(&self, id: String) -> Result<String, String> {
+    async fn delete(&self, id: String) -> ResultErr<String> {
         let filter =  doc! { "id": id.clone() };
-        self.collection.delete_one(filter).await.map(|_| id).map_err(|err| err.to_string())
+        self.collection.delete_one(filter).await
+            .map(|_| id)
+            .map_err(|err| Error::Simple(err.to_string()))
     }
 }
 

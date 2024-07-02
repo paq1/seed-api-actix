@@ -3,9 +3,10 @@ use futures::lock::Mutex;
 use uuid::Uuid;
 use crate::core::shared::event_sourcing::CommandHandler;
 use crate::core::shared::context::Context;
-use crate::core::shared::daos::{ReadOnlyEntityRepo, WriteOnlyEntityRepo, WriteOnlyEventRepo};
 use crate::core::shared::data::{Entity, EntityEvent};
 use crate::core::shared::reducer::Reducer;
+use crate::core::shared::repositories::{ReadOnlyEntityRepo, WriteOnlyEntityRepo, WriteOnlyEventRepo};
+use crate::models::shared::errors::{Error, ResultErr};
 
 pub struct Engine<
     STATE,
@@ -31,7 +32,7 @@ where
     STORE: WriteOnlyEntityRepo<STATE, String> + ReadOnlyEntityRepo<STATE, String>,
     JOURNAL: WriteOnlyEventRepo<EVENT, String>,
 {
-    pub async fn compute(&self, command: COMMAND, entity_id: String, name: String, context: Context) -> Result<String, String> {
+    pub async fn compute(&self, command: COMMAND, entity_id: String, name: String, context: Context) -> ResultErr<String> {
 
         let command_handler_found = self.handlers
             .iter().find(|handler| {
@@ -40,7 +41,7 @@ where
                 CommandHandler::Update(updated) => updated.name() == name
             }
         })
-            .ok_or("pas de gestionnaire pour cette commande".to_string())?; // fixme changer l'erreur
+            .ok_or(Error::Simple("pas de gestionnaire pour cette commande".to_string()))?; // fixme changer l'erreur
 
         let maybe_entity = self.store.lock().await.fetch_one(entity_id.clone()).await?;
         let maybe_state = maybe_entity.clone().map(|entity| entity.data);
@@ -48,13 +49,14 @@ where
         let event = match command_handler_found {
             CommandHandler::Create(x) => x.on_command(entity_id.clone(), command, context).await,
             CommandHandler::Update(x) => {
-                let state = maybe_state.clone().ok_or("resource not found".to_string())?;
+                let state = maybe_state.clone().ok_or(Error::Simple("resource not found".to_string()))?;
 
                 x.on_command(entity_id.clone(), state, command, context).await
             }
         }?;
 
-        let new_state = (self.reducer.compute_new_state)(maybe_state, event.clone()).ok_or("transition etat impossible".to_string())?;
+        let new_state = (self.reducer.compute_new_state)(maybe_state, event.clone())
+            .ok_or(Error::Simple("transition etat impossible".to_string()))?;
         let version = maybe_entity.clone()
             .map(|x| x.version.unwrap_or(0));
         let new_entity = Entity {

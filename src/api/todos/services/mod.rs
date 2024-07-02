@@ -5,12 +5,13 @@ use futures::lock::Mutex;
 use uuid::Uuid;
 
 use crate::core::shared::context::Context;
-use crate::core::shared::daos::{ReadOnlyEntityRepo, WriteOnlyEntityRepo, WriteOnlyEventRepo};
 use crate::core::shared::data::{Entity, EntityEvent};
 use crate::core::shared::id_generator::IdGenerator;
+use crate::core::shared::repositories::{ReadOnlyEntityRepo, WriteOnlyEntityRepo, WriteOnlyEventRepo};
 use crate::core::todos::data::{TodoEvents, TodoStates, UpdatedEvent};
 use crate::core::todos::data::TodoStates::Todo;
 use crate::core::todos::services::TodosService;
+use crate::models::shared::errors::{Error, ResultErr};
 use crate::models::todos::commands::*;
 
 pub struct TodosServiceImpl<STORE, JOURNAL>
@@ -28,7 +29,7 @@ where
     STORE: WriteOnlyEntityRepo<TodoStates, String> + ReadOnlyEntityRepo<TodoStates, String> + Send,
     JOURNAL: WriteOnlyEventRepo<TodoEvents, String> + Send,
 {
-    async fn create_todo(&self, command: CreateTodoCommand, context: Context) -> Result<String, String> {
+    async fn create_todo(&self, command: CreateTodoCommand, context: Context) -> ResultErr<String> {
 
         // fixme mettre des erreurs standard: String -> CustomError / Failure
         let entity_id = Self::generate_id();
@@ -47,18 +48,16 @@ where
         };
 
 
-        let insert_journal = Arc::clone(&self.journal)
+        Arc::clone(&self.journal)
             .lock().await
-            .insert(event).await;
+            .insert(event).await?;
 
-        let store = Arc::clone(&self.store)
+        Arc::clone(&self.store)
             .lock().await
-            .insert(entity).await;
-
-        insert_journal.and_then(|_| store)
+            .insert(entity).await
     }
 
-    async fn update_todo(&self, command: UpdateTodoCommand, id: String, ctx: Context) -> Result<String, String> {
+    async fn update_todo(&self, command: UpdateTodoCommand, id: String, ctx: Context) -> ResultErr<String> {
         let current = self.store.lock().await.fetch_one(id.clone()).await?;
 
         match current {
@@ -89,11 +88,11 @@ where
 
                 self.journal.lock().await.insert(event).await.and_then(|_| update_state)
             },
-            None => Err("not found".to_string())
+            None => Err(Error::Simple("not_found".to_string()))
         }
     }
 
-    async fn delete_todo(&self, _command: DeleteTodoCommand, _id: String, _ctx: Context) -> Result<String, String> {
+    async fn delete_todo(&self, _command: DeleteTodoCommand, _id: String, _ctx: Context) -> ResultErr<String> {
         todo!()
     }
 }

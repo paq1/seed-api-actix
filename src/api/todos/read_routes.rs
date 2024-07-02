@@ -4,7 +4,7 @@ use actix_web::{get, HttpResponse, Responder, web};
 use futures::lock::Mutex;
 
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
-use crate::core::shared::daos::ReadOnlyEntityRepo;
+use crate::core::shared::repositories::ReadOnlyEntityRepo;
 use crate::models::shared::errors::StandardHttpError;
 
 #[utoipa::path(
