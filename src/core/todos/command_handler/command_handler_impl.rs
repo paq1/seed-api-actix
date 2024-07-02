@@ -1,10 +1,11 @@
 use async_trait::async_trait;
-use crate::core::shared::command_handler::{CommandHandlerCreate, CommandHandler, CommandHandlerUpdate};
+
 use crate::core::shared::context::Context;
+use crate::core::shared::event_sourcing::{CommandHandlerCreate, CommandHandlerUpdate};
 use crate::core::todos::data::{TodoEvents, TodoStates, UpdatedEvent};
 use crate::models::todos::commands::TodoCommands;
 
-struct CreateTodoHandler;
+pub struct CreateTodoHandler;
 
 #[async_trait]
 impl CommandHandlerCreate<TodoStates, TodoCommands, TodoEvents> for CreateTodoHandler {
@@ -12,7 +13,7 @@ impl CommandHandlerCreate<TodoStates, TodoCommands, TodoEvents> for CreateTodoHa
         "create".to_string()
     }
 
-    async fn on_command(&self, id: String, command: TodoCommands, context: Context) -> Result<TodoEvents, String> {
+    async fn on_command(&self, _id: String, command: TodoCommands, context: Context) -> Result<TodoEvents, String> {
         println!("pouet");
 
         match command {
@@ -28,10 +29,10 @@ pub struct UpdateTodoHandler;
 #[async_trait]
 impl CommandHandlerUpdate<TodoStates, TodoCommands, TodoEvents> for UpdateTodoHandler {
     fn name(&self) -> String {
-        "create".to_string()
+        "update".to_string()
     }
 
-    async fn on_command(&self, id: String, state: TodoStates, command: TodoCommands, context: Context) -> Result<TodoEvents, String> {
+    async fn on_command(&self, _id: String, _state: TodoStates, command: TodoCommands, context: Context) -> Result<TodoEvents, String> {
         println!("pouet");
 
         match command {
@@ -41,12 +42,4 @@ impl CommandHandlerUpdate<TodoStates, TodoCommands, TodoEvents> for UpdateTodoHa
             _ => Err("bad request".to_string())
         }
     }
-}
-
-
-fn wip() {
-    let x: Vec<CommandHandler<TodoStates, TodoCommands, TodoEvents>> = vec!(
-        CommandHandler::Create(Box::new(CreateTodoHandler {})),
-        CommandHandler::Update(Box::new(UpdateTodoHandler {}))
-    );
 }

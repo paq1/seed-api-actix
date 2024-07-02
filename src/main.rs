@@ -13,7 +13,13 @@ use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_dao::{TodosEventMongoDAO, TodosMongoDAO};
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::api::todos::write_routes::{insert_one, update_one};
+use crate::core::shared::event_sourcing::CommandHandler;
+use crate::core::shared::event_sourcing::engine::Engine;
+use crate::core::todos::command_handler::command_handler_impl::{CreateTodoHandler, UpdateTodoHandler};
+use crate::core::todos::data::{TodoEvents, TodoStates};
+use crate::core::todos::reducer::TodoReducer;
 use crate::models::shared::errors::StandardHttpError;
+use crate::models::todos::commands::TodoCommands;
 
 mod core;
 mod api;
@@ -23,7 +29,7 @@ mod models;
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
-    let repo: Arc<Mutex<TodosMongoRepository>> = Arc::new(
+    let store: Arc<Mutex<TodosMongoRepository>> = Arc::new(
         Mutex::new(
             TodosMongoRepository {
                 dao: TodosMongoDAO::new("seedtodomongo".to_string(), "todos_store_actix".to_string()).await
@@ -42,11 +48,21 @@ async fn main() -> std::io::Result<()> {
     let todos_service: Arc<Mutex<TodosServiceImpl<TodosMongoRepository, TodosEventMongoRepository>>> = Arc::new(
         Mutex::new(
             TodosServiceImpl {
-                store: Arc::clone(&repo),
+                store: Arc::clone(&store),
                 journal: Arc::clone(&journal),
             }
         )
     );
+
+    let engine_todo: Arc<Mutex<Engine<TodoStates, TodoCommands, TodoEvents, TodosMongoRepository, TodosEventMongoRepository>>> = Arc::new(Mutex::new(Engine {
+        handlers: vec![
+            CommandHandler::Create(Box::new(CreateTodoHandler {})),
+            CommandHandler::Update(Box::new(UpdateTodoHandler {})),
+        ],
+        reducer: TodoReducer::new().underlying,
+        store: Arc::clone(&store),
+        journal: Arc::clone(&journal)
+    }));
 
     let openapi = ApiDoc::openapi();
     let api_address = std::env::var("API_ADDRESS").unwrap();
@@ -63,10 +79,11 @@ async fn main() -> std::io::Result<()> {
 
 
         App::new()
+            .app_data(web::Data::new(Arc::clone(&engine_todo)))
             .app_data(web::Data::new(standard_http_error))
             .app_data(web::Data::new(jwt_token_service))
             .app_data(
-                web::Data::new(Arc::clone(&repo))
+                web::Data::new(Arc::clone(&store))
             )
             .app_data(
                 web::Data::new(Arc::clone(&todos_service))

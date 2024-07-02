@@ -1,4 +1,4 @@
-mod engine;
+pub mod engine;
 
 use async_trait::async_trait;
 use crate::core::shared::context::Context;

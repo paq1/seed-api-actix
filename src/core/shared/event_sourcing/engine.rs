@@ -1,4 +1,7 @@
-use crate::core::shared::command_handler::CommandHandler;
+use std::sync::Arc;
+use futures::lock::Mutex;
+use uuid::Uuid;
+use crate::core::shared::event_sourcing::CommandHandler;
 use crate::core::shared::context::Context;
 use crate::core::shared::daos::{ReadOnlyEntityRepo, WriteOnlyEntityRepo, WriteOnlyEventRepo};
 use crate::core::shared::data::{Entity, EntityEvent};
@@ -15,10 +18,10 @@ where
     STORE: WriteOnlyEntityRepo<STATE, String> + ReadOnlyEntityRepo<STATE, String>,
     JOURNAL: WriteOnlyEventRepo<EVENT, String>,
 {
-    handlers: Vec<CommandHandler<STATE, COMMAND, EVENT>>,
-    reducer: Reducer<EVENT, STATE>,
-    store: STORE,
-    journal: JOURNAL
+    pub handlers: Vec<CommandHandler<STATE, COMMAND, EVENT>>,
+    pub reducer: Reducer<EVENT, STATE>,
+    pub store: Arc<Mutex<STORE>>,
+    pub journal: Arc<Mutex<JOURNAL>>
 }
 
 impl<STATE, COMMAND, EVENT, STORE, JOURNAL> Engine<STATE, COMMAND, EVENT, STORE, JOURNAL>
@@ -28,18 +31,18 @@ where
     STORE: WriteOnlyEntityRepo<STATE, String> + ReadOnlyEntityRepo<STATE, String>,
     JOURNAL: WriteOnlyEventRepo<EVENT, String>,
 {
-    pub async fn compute(self, command: COMMAND, entity_id: String, name: String, context: Context) -> Result<String, String> {
-        let command_handler_found = self
-            .handlers
+    pub async fn compute(&self, command: COMMAND, entity_id: String, name: String, context: Context) -> Result<String, String> {
+
+        let command_handler_found = self.handlers
             .iter().find(|handler| {
             match handler {
-                CommandHandler::Create(created) => created.clone().name() == name,
-                CommandHandler::Update(updated) => updated.clone().name() == name
+                CommandHandler::Create(created) => created.name() == name,
+                CommandHandler::Update(updated) => updated.name() == name
             }
         })
             .ok_or("pas de gestionnaire pour cette commande".to_string())?; // fixme changer l'erreur
 
-        let maybe_entity = self.store.fetch_one(entity_id.clone()).await?;
+        let maybe_entity = self.store.lock().await.fetch_one(entity_id.clone()).await?;
         let maybe_state = maybe_entity.clone().map(|entity| entity.data);
 
         let event = match command_handler_found {
@@ -52,22 +55,29 @@ where
         }?;
 
         let new_state = (self.reducer.compute_new_state)(maybe_state, event.clone()).ok_or("transition etat impossible".to_string())?;
-        let version = maybe_entity
+        let version = maybe_entity.clone()
             .map(|x| x.version.unwrap_or(0));
-
         let new_entity = Entity {
             entity_id: entity_id.clone(),
             data: new_state,
             version
         };
 
-        self.store.insert(new_entity).await?;
+        if maybe_entity.is_none() {
+            self.store.lock().await.insert(new_entity).await?;
+        } else {
+            self.store.lock().await.update(entity_id.clone(), new_entity).await?;
+        }
+
         let event_entity = EntityEvent {
             entity_id: entity_id.clone(),
-            event_id: "todo genenerate".to_string(), // todo generate event id
+            event_id:  Self::generate_id(),
             data: event
         };
+        self.journal.lock().await.insert(event_entity).await
+    }
 
-        self.journal.insert(event_entity).await
+    fn generate_id() -> String {
+        Uuid::new_v4().to_string()
     }
 }

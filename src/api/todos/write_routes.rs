@@ -2,15 +2,15 @@ use std::sync::Arc;
 
 use actix_web::{HttpRequest, HttpResponse, post, put, Responder, web};
 use futures::lock::Mutex;
-
+use uuid::Uuid;
 use crate::api::shared::token::authenticated::authenticated;
 use crate::api::shared::token::JwtTokenService;
-use crate::api::todos::services::TodosServiceImpl;
 use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
-use crate::core::todos::services::TodosService;
+use crate::core::shared::event_sourcing::engine::Engine;
+use crate::core::todos::data::{TodoEvents, TodoStates};
 use crate::models::shared::errors::StandardHttpError;
-use crate::models::todos::commands::{CreateTodoCommand, UpdateTodoCommand};
+use crate::models::todos::commands::{CreateTodoCommand, TodoCommands, UpdateTodoCommand};
 use crate::models::todos::views::Todo;
 
 #[utoipa::path(
@@ -27,18 +27,20 @@ pub async fn insert_one(
     req: HttpRequest,
     body: web::Json<CreateTodoCommand>,
     jwt_token_service: web::Data<JwtTokenService>,
-    todos_service: web::Data<Arc<Mutex<TodosServiceImpl<TodosMongoRepository, TodosEventMongoRepository>>>>,
     http_error: web::Data<StandardHttpError>,
+    engine: web::Data<Arc<Mutex<Engine<TodoStates, TodoCommands, TodoEvents, TodosMongoRepository, TodosEventMongoRepository>>>>
 ) -> impl Responder {
     match authenticated(&req, jwt_token_service.get_ref()) {
         Ok(ctx) => {
-            let command = body.into_inner();
-            let lock = todos_service.lock().await;
+            let command = TodoCommands::Create(body.into_inner());
 
-            let result_insert = lock.create_todo(command, ctx).await;
+            let entity_id = Uuid::new_v4().to_string();
 
-            match result_insert {
-                Ok(res) => HttpResponse::Created().json(Todo { name: res }),
+            let event = engine.lock().await
+                .compute(command, entity_id.clone(), "create".to_string(), ctx).await;
+
+            match event {
+                Ok(_res) => HttpResponse::Created().json(Todo { name: entity_id }),
                 Err(_) => HttpResponse::InternalServerError().json(http_error.internal_server_error.clone())
             }
         }
@@ -61,19 +63,20 @@ pub async fn update_one(
     req: HttpRequest,
     body: web::Json<UpdateTodoCommand>,
     jwt_token_service: web::Data<JwtTokenService>,
-    todos_service: web::Data<Arc<Mutex<TodosServiceImpl<TodosMongoRepository, TodosEventMongoRepository>>>>,
     http_error: web::Data<StandardHttpError>,
+    engine: web::Data<Arc<Mutex<Engine<TodoStates, TodoCommands, TodoEvents, TodosMongoRepository, TodosEventMongoRepository>>>>
 ) -> impl Responder {
     match authenticated(&req, jwt_token_service.get_ref()) {
         Ok(ctx) => {
+
             let id = path.into_inner();
-            let command = body.into_inner();
-            let lock = todos_service.lock().await;
+            let command = TodoCommands::Update(body.into_inner());
 
-            let result_insert = lock.update_todo(command, id, ctx).await;
+            let event = engine.lock().await
+                .compute(command, id, "update".to_string(), ctx).await;
 
-            match result_insert {
-                Ok(res) => HttpResponse::Ok().json(Todo { name: res }),
+            match event {
+                Ok(_res) => HttpResponse::Ok().json(Todo { name: "xxx".to_string() }),
                 Err(_) => HttpResponse::InternalServerError().json(http_error.internal_server_error.clone())
             }
         }
