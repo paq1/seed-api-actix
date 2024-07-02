@@ -1,7 +1,7 @@
 use crate::core::shared::command_handler::CommandHandler;
 use crate::core::shared::context::Context;
 use crate::core::shared::daos::{ReadOnlyEntityRepo, WriteOnlyEntityRepo, WriteOnlyEventRepo};
-use crate::core::shared::data::Entity;
+use crate::core::shared::data::{Entity, EntityEvent};
 use crate::core::shared::reducer::Reducer;
 
 pub struct Engine<
@@ -24,6 +24,7 @@ where
 impl<STATE, COMMAND, EVENT, STORE, JOURNAL> Engine<STATE, COMMAND, EVENT, STORE, JOURNAL>
 where
     STATE: Clone,
+    EVENT: Clone,
     STORE: WriteOnlyEntityRepo<STATE, String> + ReadOnlyEntityRepo<STATE, String>,
     JOURNAL: WriteOnlyEventRepo<EVENT, String>,
 {
@@ -36,7 +37,7 @@ where
                 CommandHandler::Update(updated) => updated.clone().name() == name
             }
         })
-            .ok_or("bruh".to_string())?; // fixme changer l'erreur
+            .ok_or("pas de gestionnaire pour cette commande".to_string())?; // fixme changer l'erreur
 
         let maybe_entity = self.store.fetch_one(entity_id.clone()).await?;
         let maybe_state = maybe_entity.clone().map(|entity| entity.data);
@@ -50,9 +51,7 @@ where
             }
         }?;
 
-        let new_state = (self.reducer.compute_new_state)(maybe_state, event).ok_or("transition etat impossible".to_string())?;
-
-        // todo persist state
+        let new_state = (self.reducer.compute_new_state)(maybe_state, event.clone()).ok_or("transition etat impossible".to_string())?;
         let version = maybe_entity
             .map(|x| x.version.unwrap_or(0));
 
@@ -62,11 +61,13 @@ where
             version
         };
 
-        let id_inserted = self.store.insert(new_entity).await?;
+        self.store.insert(new_entity).await?;
+        let event_entity = EntityEvent {
+            entity_id: entity_id.clone(),
+            event_id: "todo genenerate".to_string(), // todo generate event id
+            data: event
+        };
 
-        // todo persist event
-
-
-        Ok("test".to_string())
+        self.journal.insert(event_entity).await
     }
 }
