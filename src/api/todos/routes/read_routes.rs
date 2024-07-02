@@ -7,7 +7,7 @@ use futures::lock::Mutex;
 use crate::api::shared::query::pagination::HttpPaginationQuery;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use crate::core::shared::repositories::query::{PaginationDef, Query as QueryDef};
-use crate::core::shared::repositories::ReadOnlyEntityRepo;
+use crate::core::shared::repositories::{ReadOnlyEntityRepo, ReadRepoWithPagination};
 use crate::models::shared::errors::StandardHttpError;
 use crate::models::shared::jsonapi::Many;
 

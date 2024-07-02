@@ -6,12 +6,19 @@ use crate::api::todos::todos_mongo_dao::TodosMongoDAO;
 use crate::core::shared::can_get_id::CanGetId;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::shared::data::Entity;
-use crate::core::shared::repositories::{ReadOnlyEntityRepo, WriteOnlyEntityRepo};
+use crate::core::shared::repositories::{ReadOnlyEntityRepo, ReadRepoWithPagination, WriteOnlyEntityRepo};
 use crate::core::todos::data::TodoStates;
 use crate::models::shared::errors::ResultErr;
 
 pub struct TodosMongoRepository {
     pub dao: TodosMongoDAO,
+}
+
+#[async_trait]
+impl ReadRepoWithPagination<Entity<TodoStates, String>> for TodosMongoRepository {
+    async fn fetch_all_data(&self) -> ResultErr<Vec<Entity<TodoStates, String>>> {
+        self.fetch_all().await
+    }
 }
 
 #[async_trait]
