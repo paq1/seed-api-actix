@@ -5,9 +5,10 @@ use actix_web::web::Query;
 use futures::lock::Mutex;
 
 use crate::api::shared::query::pagination::HttpPaginationQuery;
+use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
+use crate::core::shared::repositories::{ReadOnlyEntityRepo, CanFetchMany};
 use crate::core::shared::repositories::query::{PaginationDef, Query as QueryDef};
-use crate::core::shared::repositories::{ReadOnlyEntityRepo, ReadRepoWithPagination};
 use crate::models::shared::errors::StandardHttpError;
 use crate::models::shared::jsonapi::Many;
 
@@ -67,6 +68,32 @@ pub async fn fetch_one(path: web::Path<String>, repo: web::Data<Arc<Mutex<TodosM
     match repo_lock.fetch_one(id).await {
         Ok(Some(res)) => HttpResponse::Ok().json(res.clone()),
         Ok(_) => HttpResponse::NotFound().json(http_error.not_found.clone()),
+        Err(_) => HttpResponse::InternalServerError().json(http_error.internal_server_error.clone())
+    }
+}
+
+#[utoipa::path(
+    responses(
+        (
+        status = 200,
+        description = "Get the current state.",
+        body = Todo
+        )
+    ),
+    params(
+        HttpPaginationQuery,
+    )
+)]
+#[get("/todos/{id}/events")]
+pub async fn fetch_events(
+    journal: web::Data<Arc<Mutex<TodosEventMongoRepository>>>,
+    http_error: web::Data<StandardHttpError>,
+    query: Query<HttpPaginationQuery>,
+) -> impl Responder {
+
+    let journal_lock = journal.lock().await;
+    match journal_lock.fetch_many(query.into()).await {
+        Ok(items) => HttpResponse::Ok().json(Many::new(items)),
         Err(_) => HttpResponse::InternalServerError().json(http_error.internal_server_error.clone())
     }
 }

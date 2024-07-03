@@ -2,6 +2,7 @@ use utoipa::Modify;
 use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
 
 use crate::api::todos::routes::read_routes::__path_fetch_many;
+use crate::api::todos::routes::read_routes::__path_fetch_events;
 use crate::api::todos::routes::read_routes::__path_fetch_one;
 use crate::api::todos::routes::write_routes::__path_insert_one;
 use crate::api::todos::routes::write_routes::__path_update_one;
@@ -15,7 +16,8 @@ use crate::models::shared::jsonapi::Many;
         fetch_many,
         fetch_one,
         insert_one,
-        update_one
+        update_one,
+        fetch_events
     ),
     components(
         schemas(

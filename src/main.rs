@@ -13,6 +13,7 @@ use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_dao::{TodosEventMongoDAO, TodosMongoDAO};
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
 use api::todos::routes::write_routes::{insert_one, update_one};
+use crate::api::todos::routes::read_routes::fetch_events;
 use crate::core::shared::event_sourcing::CommandHandler;
 use crate::core::shared::event_sourcing::engine::Engine;
 use crate::core::todos::command_handler::command_handler_impl::{CreateTodoHandler, UpdateTodoHandler};
@@ -86,6 +87,9 @@ async fn main() -> std::io::Result<()> {
                 web::Data::new(Arc::clone(&store))
             )
             .app_data(
+                web::Data::new(Arc::clone(&journal))
+            )
+            .app_data(
                 web::Data::new(Arc::clone(&todos_service))
             )
             .wrap(cors)
@@ -95,6 +99,7 @@ async fn main() -> std::io::Result<()> {
             ))
             .service(fetch_one)
             .service(fetch_many)
+            .service(fetch_events)
             .service(insert_one)
             .service(update_one)
     })

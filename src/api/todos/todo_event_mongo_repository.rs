@@ -6,13 +6,32 @@ use crate::api::todos::todos_mongo_dao::TodosEventMongoDAO;
 use crate::core::shared::can_get_id::CanGetId;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::shared::data::EntityEvent;
-use crate::core::shared::repositories::{ReadOnlyEventRepo, WriteOnlyEventRepo};
+use crate::core::shared::repositories::{CanFetchMany, ReadOnlyEventRepo, WriteOnlyEventRepo};
+use crate::core::shared::repositories::can_fetch_all::CanFetchAll;
 use crate::core::todos::data::TodoEvents;
 use crate::models::shared::errors::ResultErr;
 
 pub struct TodosEventMongoRepository {
     pub dao: TodosEventMongoDAO,
 }
+
+#[async_trait]
+impl CanFetchAll<EntityEvent<TodoEvents, String>> for TodosEventMongoRepository {
+    async fn fetch_all(&self) -> ResultErr<Vec<EntityEvent<TodoEvents, String>>> {
+        self.dao
+            .fetch_all()
+            .await
+            .map(|items| {
+                items
+                    .into_iter()
+                    .map(|dbo| dbo.into())
+                    .collect()
+            })
+    }
+}
+
+#[async_trait]
+impl CanFetchMany<EntityEvent<TodoEvents, String>> for TodosEventMongoRepository {}
 
 #[async_trait]
 impl ReadOnlyEventRepo<TodoEvents, String> for TodosEventMongoRepository {

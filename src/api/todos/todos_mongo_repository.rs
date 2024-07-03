@@ -6,7 +6,8 @@ use crate::api::todos::todos_mongo_dao::TodosMongoDAO;
 use crate::core::shared::can_get_id::CanGetId;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::shared::data::Entity;
-use crate::core::shared::repositories::{ReadOnlyEntityRepo, ReadRepoWithPagination, WriteOnlyEntityRepo};
+use crate::core::shared::repositories::{CanFetchMany, ReadOnlyEntityRepo, WriteOnlyEntityRepo};
+use crate::core::shared::repositories::can_fetch_all::CanFetchAll;
 use crate::core::todos::data::TodoStates;
 use crate::models::shared::errors::ResultErr;
 
@@ -15,20 +16,7 @@ pub struct TodosMongoRepository {
 }
 
 #[async_trait]
-impl ReadRepoWithPagination<Entity<TodoStates, String>> for TodosMongoRepository {
-    async fn fetch_all_data(&self) -> ResultErr<Vec<Entity<TodoStates, String>>> {
-        self.fetch_all().await
-    }
-}
-
-#[async_trait]
-impl ReadOnlyEntityRepo<TodoStates, String> for TodosMongoRepository {
-    async fn fetch_one(&self, id: String) -> ResultErr<Option<Entity<TodoStates, String>>> {
-        self.dao
-            .fetch_one(id).await
-            .map(|maybedata| maybedata.map(|dbo| dbo.into()))
-    }
-
+impl CanFetchAll<Entity<TodoStates, String>> for TodosMongoRepository {
     async fn fetch_all(&self) -> ResultErr<Vec<Entity<TodoStates, String>>> {
         self.dao
             .fetch_all()
@@ -39,6 +27,18 @@ impl ReadOnlyEntityRepo<TodoStates, String> for TodosMongoRepository {
                     .map(|dbo| dbo.into())
                     .collect()
             })
+    }
+}
+
+#[async_trait]
+impl CanFetchMany<Entity<TodoStates, String>> for TodosMongoRepository {}
+
+#[async_trait]
+impl ReadOnlyEntityRepo<TodoStates, String> for TodosMongoRepository {
+    async fn fetch_one(&self, id: String) -> ResultErr<Option<Entity<TodoStates, String>>> {
+        self.dao
+            .fetch_one(id).await
+            .map(|maybedata| maybedata.map(|dbo| dbo.into()))
     }
 }
 
