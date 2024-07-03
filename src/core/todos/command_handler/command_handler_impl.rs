@@ -15,8 +15,6 @@ impl CommandHandlerCreate<TodoStates, TodoCommands, TodoEvents> for CreateTodoHa
     }
 
     async fn on_command(&self, _id: String, command: TodoCommands, context: Context) -> ResultErr<TodoEvents> {
-        println!("pouet");
-
         match command {
             TodoCommands::Create(c) => Ok(
                 TodoEvents::Created { by: context.subject, at: context.now, name: c.name }
@@ -34,7 +32,6 @@ impl CommandHandlerUpdate<TodoStates, TodoCommands, TodoEvents> for UpdateTodoHa
     }
 
     async fn on_command(&self, _id: String, _state: TodoStates, command: TodoCommands, context: Context) -> ResultErr<TodoEvents> {
-        println!("pouet");
 
         match command {
             TodoCommands::Update(c) => Ok(

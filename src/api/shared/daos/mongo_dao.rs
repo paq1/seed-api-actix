@@ -7,6 +7,7 @@ use serde::Serialize;
 
 use crate::core::shared::can_get_id::CanGetId;
 use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
+use crate::core::shared::repositories::query::Query;
 use crate::models::shared::errors::{Error, ResultErr};
 
 pub struct MongoDAO<DBO>
@@ -42,8 +43,8 @@ where
             .map_err(|err| Error::Simple(err.to_string()))
     }
 
-    async fn fetch_all(&self) -> ResultErr<Vec<DBO>> {
-        self.find_all().await
+    async fn fetch_all(&self, query: Query) -> ResultErr<Vec<DBO>> {
+        self.find_all(query).await
             .map_err(|err| Error::Simple(err.to_string()))
     }
 }
@@ -84,13 +85,15 @@ impl<DBO> MongoDAO<DBO>
 where
     DBO: DeserializeOwned + Send + Sync,
 {
-    async fn find_all(&self) -> Result<Vec<DBO>, mongodb::error::Error> {
+    async fn find_all(&self, query: Query) -> Result<Vec<DBO>, mongodb::error::Error> {
+
         Ok(
             self.collection
-                .find(doc! {})
+                .find(query.into())
                 .await?
                 .try_collect::<Vec<DBO>>()
                 .await.unwrap()
         )
+
     }
 }

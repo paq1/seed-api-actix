@@ -4,44 +4,30 @@ use actix_web::{get, HttpResponse, Responder, web};
 use actix_web::web::Query;
 use futures::lock::Mutex;
 
-use crate::api::shared::query::pagination::HttpPaginationQuery;
+use crate::api::todos::query::TodoQuery;
 use crate::api::todos::todo_event_mongo_repository::TodosEventMongoRepository;
 use crate::api::todos::todos_mongo_repository::TodosMongoRepository;
-use crate::core::shared::repositories::{ReadOnlyEntityRepo, CanFetchMany};
-use crate::core::shared::repositories::query::{PaginationDef, Query as QueryDef};
+use crate::core::shared::repositories::{CanFetchMany, ReadOnlyEntityRepo};
+use crate::core::shared::repositories::filter::{Expr, ExprGeneric, Filter, Operation};
+use crate::core::shared::repositories::query::Query as QueryCore;
 use crate::models::shared::errors::StandardHttpError;
 use crate::models::shared::jsonapi::Many;
-
-impl From<Query<HttpPaginationQuery>> for QueryDef {
-    fn from(value: Query<HttpPaginationQuery>) -> Self {
-        let size = value.size.unwrap_or(10);
-        let number = value.number.unwrap_or(1);
-
-        Self {
-            pagination: PaginationDef {
-                page_number: number,
-                page_size: size
-            }
-        }
-    }
-}
 
 #[utoipa::path(
     responses(
         (status = 200, description = "fait ca", body = Many < Todo >)
     ),
     params(
-        HttpPaginationQuery,
+        TodoQuery
     )
 )]
 #[get("/todos")]
 pub async fn fetch_many(
     store: web::Data<Arc<Mutex<TodosMongoRepository>>>,
     http_error: web::Data<StandardHttpError>,
-    query: Query<HttpPaginationQuery>,
+    query: Query<TodoQuery>,
 ) -> impl Responder {
 
-    println!("query {query:?}");
     let store_lock = store.lock().await;
     match store_lock.fetch_many(query.into()).await {
         Ok(items) => HttpResponse::Ok().json(Many::new(items)),
@@ -81,18 +67,35 @@ pub async fn fetch_one(path: web::Path<String>, repo: web::Data<Arc<Mutex<TodosM
         )
     ),
     params(
-        HttpPaginationQuery,
+        TodoQuery
     )
 )]
 #[get("/todos/{id}/events")]
 pub async fn fetch_events(
+    path: web::Path<String>,
     journal: web::Data<Arc<Mutex<TodosEventMongoRepository>>>,
     http_error: web::Data<StandardHttpError>,
-    query: Query<HttpPaginationQuery>,
+    query: Query<TodoQuery>,
 ) -> impl Responder {
+    let id = path.into_inner();
+    let query_core: QueryCore = query.into();
+
+    let query_core_with_filter = QueryCore {
+        filter: Filter::Expr(
+            Expr::ExprStr(
+                ExprGeneric::<String> {
+                    field: "entity_id".to_string(),
+                    operation: Operation::EqualsTo,
+                    head: id.to_string(),
+                }
+            )
+        ),
+        ..query_core.clone()
+    };
+
 
     let journal_lock = journal.lock().await;
-    match journal_lock.fetch_many(query.into()).await {
+    match journal_lock.fetch_many(query_core_with_filter).await {
         Ok(items) => HttpResponse::Ok().json(Many::new(items)),
         Err(_) => HttpResponse::InternalServerError().json(http_error.internal_server_error.clone())
     }

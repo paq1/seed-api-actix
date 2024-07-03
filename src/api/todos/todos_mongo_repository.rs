@@ -8,6 +8,7 @@ use crate::core::shared::daos::{ReadOnlyDAO, WriteOnlyDAO};
 use crate::core::shared::data::Entity;
 use crate::core::shared::repositories::{CanFetchMany, ReadOnlyEntityRepo, WriteOnlyEntityRepo};
 use crate::core::shared::repositories::can_fetch_all::CanFetchAll;
+use crate::core::shared::repositories::query::Query;
 use crate::core::todos::data::TodoStates;
 use crate::models::shared::errors::ResultErr;
 
@@ -17,9 +18,9 @@ pub struct TodosMongoRepository {
 
 #[async_trait]
 impl CanFetchAll<Entity<TodoStates, String>> for TodosMongoRepository {
-    async fn fetch_all(&self) -> ResultErr<Vec<Entity<TodoStates, String>>> {
+    async fn fetch_all(&self, query: Query) -> ResultErr<Vec<Entity<TodoStates, String>>> {
         self.dao
-            .fetch_all()
+            .fetch_all(query)
             .await
             .map(|items| {
                 items

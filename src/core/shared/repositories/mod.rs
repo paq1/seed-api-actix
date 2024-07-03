@@ -7,6 +7,7 @@ use crate::models::shared::errors::ResultErr;
 
 pub mod query;
 pub mod can_fetch_all;
+pub mod filter;
 
 #[async_trait]
 pub trait ReadOnlyEntityRepo<DATA: Clone, ID: Clone>: CanFetchAll<Entity<DATA, ID>> + CanFetchMany<Entity<DATA, ID>> {
@@ -36,7 +37,7 @@ pub trait WriteOnlyEventRepo<DATA, ID> {
 #[async_trait]
 pub trait CanFetchMany<ENTITY: Clone>: CanFetchAll<ENTITY> {
     async fn fetch_many(&self, query: Query) -> ResultErr<Paged<ENTITY>> {
-        let entities = self.fetch_all().await?;
+        let entities = self.fetch_all(query.clone()).await?;
         let start = (query.pagination.page_number - 1) * query.pagination.page_size;
         let end = start.clone() + query.pagination.page_size;
         let max_page = f64::ceil(entities.len() as f64 / query.pagination.page_size as f64) as usize;
