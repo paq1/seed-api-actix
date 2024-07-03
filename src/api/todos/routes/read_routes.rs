@@ -15,7 +15,7 @@ use crate::models::shared::jsonapi::Many;
 
 #[utoipa::path(
     responses(
-        (status = 200, description = "fait ca", body = Many < Todo >)
+        (status = 200, description = "fait ca", body = Many < TodoStates >)
     ),
     params(
         TodoQuery
@@ -44,7 +44,7 @@ pub async fn fetch_many(
         )
     )
 )]
-#[get("/todos/{id}")]
+#[get("/todos/{entity_id}")]
 pub async fn fetch_one(path: web::Path<String>, repo: web::Data<Arc<Mutex<TodosMongoRepository>>>, http_error: web::Data<StandardHttpError>) -> impl Responder {
     let id = path.into_inner();
 
@@ -70,7 +70,7 @@ pub async fn fetch_one(path: web::Path<String>, repo: web::Data<Arc<Mutex<TodosM
         TodoQuery
     )
 )]
-#[get("/todos/{id}/events")]
+#[get("/todos/{entity_id}/events")]
 pub async fn fetch_events(
     path: web::Path<String>,
     journal: web::Data<Arc<Mutex<TodosEventMongoRepository>>>,

@@ -9,6 +9,7 @@ use crate::api::todos::routes::write_routes::__path_update_one;
 use crate::models::todos::commands::{CreateTodoCommand, UpdateTodoCommand, DeleteTodoCommand};
 use crate::models::todos::views::{Todo, TokenClaims};
 use crate::models::shared::jsonapi::Many;
+use crate::core::todos::data::TodoStates;
 
 #[derive(utoipa::OpenApi)]
 #[openapi(
@@ -22,7 +23,8 @@ use crate::models::shared::jsonapi::Many;
     components(
         schemas(
             TokenClaims,
-            Many<Todo>,
+            Todo,
+            Many<TodoStates>,
             Todo,
             CreateTodoCommand,
             UpdateTodoCommand,

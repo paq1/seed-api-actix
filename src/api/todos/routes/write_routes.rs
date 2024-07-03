@@ -22,7 +22,7 @@ use crate::models::todos::views::Todo;
     ("bearer_auth" = [])
     )
 )]
-#[post("/todos")]
+#[post("/todos/commands/create")]
 pub async fn insert_one(
     req: HttpRequest,
     body: web::Json<CreateTodoCommand>,
@@ -57,7 +57,7 @@ pub async fn insert_one(
     ("bearer_auth" = [])
     )
 )]
-#[put("/todos/commands/update/{id}")]
+#[put("/todos/commands/update/{entity_id}")]
 pub async fn update_one(
     path: web::Path<String>,
     req: HttpRequest,
