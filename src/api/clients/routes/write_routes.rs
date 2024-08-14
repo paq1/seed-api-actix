@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::api::shared::helpers::http_response::{CanToHttpResponse, HttpKindResponse};
 use crate::api::shared::mappers::event_api_view::from_entity_event_to_view;
 use crate::api::shared::token::authenticated::authenticated;
-use crate::api::shared::token::services::jwt_rsa::JwtRSATokenService;
+use crate::api::shared::token::services::jwt_hmac::JwtHMACTokenService;
 use crate::core::clients::data::events::ClientEvents;
 use crate::core::clients::data::states::ClientStates;
 use crate::core::shared::event_sourcing::engine::Engine;
@@ -26,7 +26,7 @@ use crate::models::shared::errors::StandardHttpError;
 pub async fn insert_one_client(
     req: HttpRequest,
     body: web::Json<CreateClientCommand>,
-    jwt_token_service: web::Data<JwtRSATokenService>,
+    jwt_token_service: web::Data<JwtHMACTokenService>,
     http_error: web::Data<StandardHttpError>,
     engine: web::Data<Arc<Engine<ClientStates, ClientsCommands, ClientEvents>>>,
 ) -> impl Responder {
@@ -67,7 +67,7 @@ pub async fn update_one_client(
     path: web::Path<String>,
     req: HttpRequest,
     body: web::Json<UpdateClientCommand>,
-    jwt_token_service: web::Data<JwtRSATokenService>,
+    jwt_token_service: web::Data<JwtHMACTokenService>,
     http_error: web::Data<StandardHttpError>,
     engine: web::Data<Arc<Engine<ClientStates, ClientsCommands, ClientEvents>>>,
 ) -> impl Responder {
@@ -107,7 +107,7 @@ pub async fn disable_one_client(
     path: web::Path<String>,
     req: HttpRequest,
     body: web::Json<DisableClientCommand>,
-    jwt_token_service: web::Data<JwtRSATokenService>,
+    jwt_token_service: web::Data<JwtHMACTokenService>,
     http_error: web::Data<StandardHttpError>,
     engine: web::Data<Arc<Engine<ClientStates, ClientsCommands, ClientEvents>>>,
 ) -> impl Responder {
