@@ -9,10 +9,6 @@ impl From<JwtClaims> for Context {
     fn from(value: JwtClaims) -> Self {
         Self {
             subject: value.sub,
-            name: value.name,
-            // given_name: value.given_name, pas utilisé dans les spec metier :)
-            // family_name: value.family_name, pas utilisé dans les spec metier :)
-            email: value.email,
             now: Utc::now(),
             meta: HashMap::new(),
             filters: HashMap::new(),
@@ -23,8 +19,6 @@ impl From<JwtClaims> for Context {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct JwtClaims {
     pub sub: String,
-    pub name: String,
     pub given_name: String,
     pub family_name: String,
-    pub email: String,
 }

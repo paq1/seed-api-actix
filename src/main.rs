@@ -12,9 +12,6 @@ use api::clients::routes::write_routes::{insert_one_client, update_one_client};
 use crate::api::clients::client_component::ClientComponent;
 use crate::api::clients::routes::read_routes::{fetch_events_client, fetch_one_client_event};
 use crate::api::clients::routes::write_routes::disable_one_client;
-use crate::api::contrats::contract_component::ContractComponent;
-use crate::api::contrats::routes::read_routes::{fetch_events_contrat, fetch_many_contrat, fetch_one_contract_event, fetch_one_contrat};
-use crate::api::contrats::routes::write_routes::{approve_one_contrat, insert_one_contrat, reject_one_contrat, terminate_one_contrat, update_one_contrat};
 use crate::api::shared::cache::CacheAsync;
 use crate::api::shared::token::services::jwt_hmac::JwtHMACTokenService;
 use crate::api::shared::token::services::jwt_rsa::JwtRSATokenService;
@@ -37,7 +34,6 @@ async fn main() -> std::io::Result<()> {
     // client ontology
     // dao
     let client_component = ClientComponent::new().await;
-    let contract_component = ContractComponent::new(Arc::clone(&client_component.store)).await;
 
     let openapi = ApiDoc::openapi();
     let api_address = std::env::var("API_ADDRESS").unwrap();
@@ -74,17 +70,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(
                 web::Data::new(Arc::clone(&client_component.service))
             )
-            // contrats services
-            .app_data(web::Data::new(Arc::clone(&contract_component.engine)))
-            .app_data(
-                web::Data::new(Arc::clone(&contract_component.store))
-            )
-            .app_data(
-                web::Data::new(Arc::clone(&contract_component.journal))
-            )
-            .app_data(
-                web::Data::new(Arc::clone(&contract_component.service))
-            )
+
             // client routes
             .service(fetch_one_client)
             .service(fetch_one_client_event)
@@ -93,16 +79,6 @@ async fn main() -> std::io::Result<()> {
             .service(insert_one_client)
             .service(update_one_client)
             .service(disable_one_client)
-            // contrats routes
-            .service(fetch_one_contract_event)
-            .service(fetch_one_contrat)
-            .service(fetch_many_contrat)
-            .service(fetch_events_contrat)
-            .service(insert_one_contrat)
-            .service(approve_one_contrat)
-            .service(reject_one_contrat)
-            .service(terminate_one_contrat)
-            .service(update_one_contrat)
     })
         .workers(2)
         .bind((api_address, api_port))?

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use actix_web::{HttpRequest, HttpResponse, post, put, Responder, web};
 use uuid::Uuid;
-
+use crate::api::shared::helpers::http_response::{CanToHttpResponse, HttpKindResponse};
 use crate::api::shared::mappers::event_api_view::from_entity_event_to_view;
 use crate::api::shared::token::authenticated::authenticated;
 use crate::api::shared::token::services::jwt_rsa::JwtRSATokenService;
@@ -39,18 +39,15 @@ pub async fn insert_one_client(
             let event = engine
                 .compute(command, entity_id, "create-client".to_string(), &ctx).await;
 
-            match event {
-                Ok((event, _state)) =>
-                    HttpResponse::Created().json(
-                        from_entity_event_to_view::<ClientEvents, ClientViewEvent>(
-                            event,
-                            "clients".to_string(),
-                            "org:example:insurance:client".to_string(),
-                            &ctx,
-                        )
-                    ),
-                Err(_) => HttpResponse::InternalServerError().json(&http_error.internal_server_error)
-            }
+            event.map(|(event, _)| {
+                from_entity_event_to_view::<ClientEvents, ClientViewEvent>(
+                    event,
+                    "clients".to_string(),
+                    "org:example:insurance:client".to_string(),
+                    &ctx,
+                )
+            })
+                .to_http_response_with_error_mapping(HttpKindResponse::Created)
         }
         Err(_err) => HttpResponse::Unauthorized().json(&http_error.unauthorized)
     }
@@ -82,18 +79,15 @@ pub async fn update_one_client(
             let event = engine
                 .compute(command, id, "update-client".to_string(), &ctx).await;
 
-            match event {
-                Ok((event, _state)) => HttpResponse::Ok()
-                    .json(
-                        from_entity_event_to_view::<ClientEvents, ClientViewEvent>(
-                            event,
-                            "clients".to_string(),
-                            "org:example:insurance:client".to_string(),
-                            &ctx,
-                        )
-                    ),
-                Err(_) => HttpResponse::InternalServerError().json(&http_error.internal_server_error)
-            }
+            event.map(|(event, _)| {
+                from_entity_event_to_view::<ClientEvents, ClientViewEvent>(
+                    event,
+                    "clients".to_string(),
+                    "org:example:insurance:client".to_string(),
+                    &ctx,
+                )
+            })
+                .to_http_response_with_error_mapping(HttpKindResponse::Ok)
         }
         Err(_err) => HttpResponse::Unauthorized().json(&http_error.unauthorized)
     }
@@ -125,16 +119,16 @@ pub async fn disable_one_client(
             let event = engine
                 .compute(command, id, "disable-client".to_string(), &ctx).await;
 
-            match event {
-                Ok((event, _state)) => HttpResponse::Ok().json(
-                    from_entity_event_to_view::<ClientEvents, ClientViewEvent>(
-                        event,
-                        "clients".to_string(),
-                        "org:example:insurance:client".to_string(),
-                        &ctx,
-                    )),
-                Err(_) => HttpResponse::InternalServerError().json(&http_error.internal_server_error)
-            }
+
+            event.map(|(event, _)| {
+                from_entity_event_to_view::<ClientEvents, ClientViewEvent>(
+                    event,
+                    "clients".to_string(),
+                    "org:example:insurance:client".to_string(),
+                    &ctx,
+                )
+            })
+                .to_http_response_with_error_mapping(HttpKindResponse::Ok)
         }
         Err(_err) => HttpResponse::Unauthorized().json(&http_error.unauthorized)
     }
