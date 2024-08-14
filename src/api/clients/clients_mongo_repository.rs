@@ -84,9 +84,9 @@ impl WriteOnlyEntityRepo<ClientStates, String> for ClientsMongoRepository {
             .update(id, &sanitize_version).await
     }
 
-    async fn delete(&self, id: &String) -> ResultErr<String> {
-        self.dao
-            .lock().await
-            .delete(id).await
-    }
+    // async fn delete(&self, id: &String) -> ResultErr<String> {
+    //     self.dao
+    //         .lock().await
+    //         .delete(id).await
+    // }
 }

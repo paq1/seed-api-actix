@@ -17,5 +17,5 @@ pub trait ReadOnlyEntityRepo<DATA: Clone, ID: Clone>: CanFetchAll<Entity<DATA, I
 pub trait WriteOnlyEntityRepo<DATA: Clone, ID: Clone> {
     async fn insert(&self, entity: &Entity<DATA, ID>) -> ResultErr<ID>;
     async fn update(&self, id: &ID, entity: &Entity<DATA, ID>) -> ResultErr<ID>;
-    async fn delete(&self, id: &ID) -> ResultErr<ID>;
+    // async fn delete(&self, id: &ID) -> ResultErr<ID>;
 }

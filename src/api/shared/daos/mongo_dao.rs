@@ -78,12 +78,12 @@ where
             .map_err(|err| Error::Simple(err.to_string()))
     }
 
-    async fn delete(&self, id: &String) -> ResultErr<String> {
-        let filter = doc! { "id": id };
-        self.collection.delete_one(filter).await
-            .map(|_| id.clone())
-            .map_err(|err| Error::Simple(err.to_string()))
-    }
+    // async fn delete(&self, id: &String) -> ResultErr<String> {
+    //     let filter = doc! { "id": id };
+    //     self.collection.delete_one(filter).await
+    //         .map(|_| id.clone())
+    //         .map_err(|err| Error::Simple(err.to_string()))
+    // }
 }
 
 impl<DBO> MongoDAO<DBO>

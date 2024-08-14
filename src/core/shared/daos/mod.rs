@@ -15,6 +15,6 @@ pub trait ReadOnlyDAO<DBO, ID> {
 pub trait WriteOnlyDAO<DBO, ID> {
     async fn insert(&self, entity: &DBO) -> ResultErr<ID>;
     async fn update(&self, id: &ID, entity: &DBO) -> ResultErr<ID>;
-    async fn delete(&self, id: &ID) -> ResultErr<ID>;
+    // async fn delete(&self, id: &ID) -> ResultErr<ID>;
 }
 
