@@ -1,4 +1,5 @@
 use mongodb::bson::{doc, Document};
+
 use crate::core::shared::repositories::filter::Expr::ExprStr;
 use crate::core::shared::repositories::filter::Filter;
 use crate::core::shared::repositories::filter::Filter::Expr;
@@ -13,9 +14,8 @@ impl From<Query> for Document {
                 match e {
                     ExprStr(x) => doc! { x.field.as_str() : x.head.as_str() }
                 }
-            },
+            }
             Filter::None => doc! {}
-
         }
     }
 }

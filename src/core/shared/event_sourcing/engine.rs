@@ -1,39 +1,28 @@
 use std::sync::Arc;
-use futures::lock::Mutex;
+
 use uuid::Uuid;
-use crate::core::shared::event_sourcing::CommandHandler;
+
 use crate::core::shared::context::Context;
 use crate::core::shared::data::{Entity, EntityEvent};
+use crate::core::shared::event_sourcing::CommandHandler;
 use crate::core::shared::reducer::Reducer;
-use crate::core::shared::repositories::{ReadOnlyEntityRepo, WriteOnlyEntityRepo, WriteOnlyEventRepo};
+use crate::core::shared::repositories::entities::RepositoryEntity;
+use crate::core::shared::repositories::events::RepositoryEvents;
 use crate::models::shared::errors::{Error, ResultErr};
 
-pub struct Engine<
-    STATE: Clone,
-    COMMAND,
-    EVENT,
-    STORE,
-    JOURNAL
->
-where
-    STORE: WriteOnlyEntityRepo<STATE, String> + ReadOnlyEntityRepo<STATE, String>,
-    JOURNAL: WriteOnlyEventRepo<EVENT, String>,
-{
+pub struct Engine<STATE: Clone, COMMAND, EVENT> {
     pub handlers: Vec<CommandHandler<STATE, COMMAND, EVENT>>,
     pub reducer: Reducer<EVENT, STATE>,
-    pub store: Arc<Mutex<STORE>>,
-    pub journal: Arc<Mutex<JOURNAL>>
+    pub store: Arc<dyn RepositoryEntity<STATE, String>>,
+    pub journal: Arc<dyn RepositoryEvents<EVENT, String>>,
 }
 
-impl<STATE, COMMAND, EVENT, STORE, JOURNAL> Engine<STATE, COMMAND, EVENT, STORE, JOURNAL>
+impl<STATE, COMMAND, EVENT> Engine<STATE, COMMAND, EVENT>
 where
     STATE: Clone,
     EVENT: Clone,
-    STORE: WriteOnlyEntityRepo<STATE, String> + ReadOnlyEntityRepo<STATE, String>,
-    JOURNAL: WriteOnlyEventRepo<EVENT, String>,
 {
-    pub async fn compute(&self, command: COMMAND, entity_id: String, name: String, context: Context) -> ResultErr<String> {
-
+    pub async fn compute(&self, command: COMMAND, entity_id: String, name: String, context: &Context) -> ResultErr<(EntityEvent<EVENT, String>, Entity<STATE, String>)> {
         let command_handler_found = self.handlers
             .iter().find(|handler| {
             match handler {
@@ -41,9 +30,9 @@ where
                 CommandHandler::Update(updated) => updated.name() == name
             }
         })
-            .ok_or(Error::Simple("pas de gestionnaire pour cette commande".to_string()))?; // fixme changer l'erreur
+            .ok_or(Error::Simple("pas de handler pour cette commande".to_string()))?;
 
-        let maybe_entity = self.store.lock().await.fetch_one(entity_id.clone()).await?;
+        let maybe_entity = self.store.fetch_one(&entity_id).await?;
         let maybe_state = maybe_entity.clone().map(|entity| entity.data);
 
         let event = match command_handler_found {
@@ -61,22 +50,23 @@ where
             .map(|x| x.version.unwrap_or(0));
         let new_entity = Entity {
             entity_id: entity_id.clone(),
-            data: new_state,
-            version
+            data: new_state.clone(),
+            version,
         };
 
         if maybe_entity.is_none() {
-            self.store.lock().await.insert(new_entity).await?;
+            self.store.insert(&new_entity).await?;
         } else {
-            self.store.lock().await.update(entity_id.clone(), new_entity).await?;
+            self.store.update(&entity_id, &new_entity).await?;
         }
 
         let event_entity = EntityEvent {
             entity_id: entity_id.clone(),
-            event_id:  Self::generate_id(),
-            data: event
+            event_id: Self::generate_id(),
+            data: event.clone(),
         };
-        self.journal.lock().await.insert(event_entity).await
+        self.journal.insert(&event_entity).await?;
+        Ok((event_entity, new_entity))
     }
 
     fn generate_id() -> String {
