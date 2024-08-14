@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
-use moka::future::Cache;
+// use moka::future::Cache;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
 
@@ -12,9 +12,9 @@ use api::clients::routes::write_routes::{insert_one_client, update_one_client};
 use crate::api::clients::client_component::ClientComponent;
 use crate::api::clients::routes::read_routes::{fetch_events_client, fetch_one_client_event};
 use crate::api::clients::routes::write_routes::disable_one_client;
-use crate::api::shared::cache::CacheAsync;
+// use crate::api::shared::cache::CacheAsync;
 use crate::api::shared::token::services::jwt_hmac::JwtHMACTokenService;
-use crate::api::shared::token::services::jwt_rsa::JwtRSATokenService;
+// use crate::api::shared::token::services::jwt_rsa::JwtRSATokenService;
 use crate::api::swagger::ApiDoc;
 use crate::models::shared::errors::StandardHttpError;
 
@@ -26,10 +26,8 @@ mod models;
 async fn main() -> std::io::Result<()> {
     dotenv::dotenv().ok();
 
-    let auth_back_url = std::env::var("AUTH_BACK_URL").unwrap_or("http://localhost:9001".to_string());
-
-    let cache = Arc::new(CacheAsync { underlying: Cache::new(10_000) });
-    let http_client = Arc::new(reqwest::Client::new());
+    // let cache = Arc::new(CacheAsync { underlying: Cache::new(10_000) });
+    // let http_client = Arc::new(reqwest::Client::new());
 
     // client ontology
     // dao
@@ -47,8 +45,6 @@ async fn main() -> std::io::Result<()> {
 
         let standard_http_error = StandardHttpError::new();
         let jwt_token_service = JwtHMACTokenService::new("test".to_string());
-        let jwt_rsa_token_service = JwtRSATokenService::new(Arc::clone(&cache), Arc::clone(&http_client), auth_back_url.clone());
-
 
         App::new()
             .wrap(cors)
@@ -56,7 +52,6 @@ async fn main() -> std::io::Result<()> {
                 "/api-docs/openapi.json",
                 openapi.clone(),
             ))
-            .app_data(web::Data::new(jwt_rsa_token_service))
             .app_data(web::Data::new(standard_http_error))
             .app_data(web::Data::new(jwt_token_service))
             // clients services

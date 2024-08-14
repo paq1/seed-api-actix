@@ -19,6 +19,6 @@ impl From<JwtClaims> for Context {
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct JwtClaims {
     pub sub: String,
-    pub given_name: String,
-    pub family_name: String,
+    pub name: String,
+    pub exp: u64,
 }
