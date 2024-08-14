@@ -1,5 +1,5 @@
-use utoipa::Modify;
 use utoipa::openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme};
+use utoipa::Modify;
 
 use crate::api::clients::routes::read_routes::__path_fetch_events_client;
 use crate::api::clients::routes::read_routes::__path_fetch_many_client;
@@ -9,14 +9,14 @@ use crate::api::clients::routes::write_routes::__path_insert_one_client;
 use crate::api::clients::routes::write_routes::__path_update_one_client;
 use crate::core::shared::repositories::query::{InfoPaged, Page, Paged};
 use crate::models::clients::commands::*;
-use crate::models::clients::shared::{ClientData, DisableReason, Phone, PhoneNumber};
-use crate::models::clients::views::*;
+use crate::models::clients::shared::{ClientData, DisableReason};
 use crate::models::clients::views::ClientView;
 use crate::models::clients::views::ClientViewEvent;
+use crate::models::clients::views::*;
 use crate::models::shared::jsonapi::ManyView;
 use crate::models::shared::views::command_handler_view::ApiView;
-use crate::models::shared::views::DataWrapperView;
 use crate::models::shared::views::entities::EntityView;
+use crate::models::shared::views::DataWrapperView;
 use crate::models::shared_business::Adresse;
 
 #[derive(utoipa::OpenApi)]
@@ -38,8 +38,6 @@ use crate::models::shared_business::Adresse;
             DisableClientCommand,
             ClientData,
             Adresse,
-            PhoneNumber,
-            Phone,
             DisableReason,
             DataWrapperView < ApiView < ClientViewEvent > >,
             EntityView<ClientViewState>,
